@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package comms;
+
+
+// Joint configuration for a single robot
+message ConfPb {
+  repeated double data = 1;
+}
+
+// "System configuration", legacy type mapping individual robots
+// to respective independent configurations
+message SystemConfPb {
+  map<string, ConfPb> data = 1;
+}
+
+// all data required to uniquely define a planning problem
+// (alongside the problem URDF)
+message ProblemDefPb {
+  string name = 1;
+  SystemConfPb goal = 2;
+  SystemConfPb start = 3;
+  double orientation_tol = 4;
+  bool use_columnar_constraint = 5;
+  bool use_height_constraint = 6;
+  string tool_frame = 7;
+  double discretization = 8;
+}
+
+// placeholder message type for "new" params (to be
+// used by GCS)
+message ParamsPb {
+  string data = 1;
+}
+
+// placeholder message type to return runnable trajectories
+// (drake Polynomials?)
+message PlanPb {
+  string data = 1;
+}
+
+// request sent by a client to start a given plan
+message StartPlanRequest {
+  uint64 id = 1;
+  ProblemDefPb def = 2;
+  string urdf = 3;
+  ParamsPb params = 4;
+  optional string legacy_params = 5; // TODO(@davebambrick): deprecate
+}
+// request sent by a clent to retrieve a plan with the given ID
+message RetrievePlanRequest {
+  uint64 id = 1;
+}
+
+message StartPlanResponse {
+  uint64 id = 1;
+  bool success = 2;
+  // msg used to convey extra information to client; usually
+  // for explaining cause of error
+  optional string msg = 4;
+}
+
+message RetrievePlanResponse {
+  uint64 id = 1;
+  bool success = 2;
+  optional PlanPb plan = 3;
+  // msg used to convey extra information to client; usually
+  // for explaining cause of error
+  optional string msg = 4;
+}
+
+service PlanningComms {
+  rpc HandleStartRequest(StartPlanRequest) returns (StartPlanResponse) {}
+  rpc HandleRetrievalRequest(RetrievePlanRequest) returns (RetrievePlanResponse) {}
+}
