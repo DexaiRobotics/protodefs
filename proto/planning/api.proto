@@ -45,7 +45,7 @@ message StartPlanRequest {
   ProblemDefPb def = 2;
   string urdf = 3;
   ParamsPb params = 4;
-  optional string legacy_params = 5; // TODO(@davebambrick): deprecate
+  string legacy_params = 5; // TODO(@davebambrick): deprecate
 }
 // request sent by a clent to retrieve a plan with the given ID
 message RetrievePlanRequest {
@@ -57,16 +57,16 @@ message StartPlanResponse {
   bool success = 2;
   // msg used to convey extra information to client; usually
   // for explaining cause of error
-  optional string msg = 4;
+  string msg = 4;
 }
 
 message RetrievePlanResponse {
   uint64 id = 1;
   bool success = 2;
-  optional PlanPb plan = 3;
+  PlanPb plan = 3;
   // msg used to convey extra information to client; usually
   // for explaining cause of error
-  optional string msg = 4;
+  string msg = 4;
 }
 
 service PlanningComms {
