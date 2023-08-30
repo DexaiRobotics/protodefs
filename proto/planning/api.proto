@@ -69,6 +69,6 @@ message RetrievePlanResponse {
 
 service MotionPlanner {
   rpc HandleStartRequest(StartPlanRequest) returns (StartPlanResponse) {}
-  rpc HandleRetrievalRequest(RetrievePlanRequest) returns (RetrievePlanResponse) {}
+  rpc HandleRetrieveRequest(RetrievePlanRequest) returns (RetrievePlanResponse) {}
 }
 
