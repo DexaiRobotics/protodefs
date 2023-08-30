@@ -1,7 +1,5 @@
 syntax = "proto3";
 
-package comms;
-
 
 // Joint configuration for a single robot
 message ConfPb {
@@ -69,7 +67,8 @@ message RetrievePlanResponse {
   string msg = 4;
 }
 
-service PlanningComms {
+service MotionPlanner {
   rpc HandleStartRequest(StartPlanRequest) returns (StartPlanResponse) {}
   rpc HandleRetrievalRequest(RetrievePlanRequest) returns (RetrievePlanResponse) {}
 }
+
