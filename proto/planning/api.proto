@@ -31,11 +31,23 @@ message ParamsPb {
   string data = 1;
 }
 
-// placeholder message type to return runnable trajectories
-// (drake Polynomials?)
-message PlanPb {
-  string data = 1;
+// runnable trajectory return type
+message SysPolyPb {
+  map<string, PolyPb> data = 1;
 }
+
+message PolyPb {
+  repeated double breaks = 1;
+  uint32 rows = 2;
+  uint32 cols = 3;
+  // vector of monomial coefficients
+  repeated Coeffs coeffs = 4;
+}
+
+message Coeffs {
+  repeated double data = 1;
+}
+
 
 // request sent by a client to start a given plan
 message StartPlanRequest {
@@ -44,6 +56,14 @@ message StartPlanRequest {
   string urdf = 3;
   ParamsPb params = 4;
   string legacy_params = 5; // TODO(@davebambrick): deprecate
+}
+
+message StartPlanResponse {
+  uint32 id = 1;
+  bool success = 2;
+  // msg used to convey extra information to client; usually
+  // for explaining cause of error
+  string msg = 4;
 }
 
 // retrieve type dictating the behavior when retrieving a given plan
@@ -55,25 +75,17 @@ enum RetrieveType {
   // wait for a give timeout
   WITH_TIMEOUT = 2;
 }
-// request sent by a clent to retrieve a plan with the given ID
+// request sent by a client to retrieve a plan with the given ID
 message RetrievePlanRequest {
   uint32 id = 1;
   RetrieveType retrieve_type = 2;
   uint32 timeout_ms = 3;
 }
 
-message StartPlanResponse {
-  uint32 id = 1;
-  bool success = 2;
-  // msg used to convey extra information to client; usually
-  // for explaining cause of error
-  string msg = 4;
-}
-
 message RetrievePlanResponse {
   uint32 id = 1;
   bool success = 2;
-  PlanPb plan = 3;
+  SysPolyPb plan = 3;
   // msg used to convey extra information to client; usually
   // for explaining cause of error
   string msg = 4;
