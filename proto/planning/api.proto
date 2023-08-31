@@ -39,19 +39,31 @@ message PlanPb {
 
 // request sent by a client to start a given plan
 message StartPlanRequest {
-  uint64 id = 1;
+  uint32 id = 1;
   ProblemDefPb def = 2;
   string urdf = 3;
   ParamsPb params = 4;
   string legacy_params = 5; // TODO(@davebambrick): deprecate
 }
+
+// retrieve type dictating the behavior when retrieving a given plan
+enum RetrieveType {
+  // block until the plan is ready
+  BLOCKING = 0;
+  // only retrieve if ready
+  IF_READY = 1;
+  // wait for a give timeout
+  WITH_TIMEOUT = 2;
+}
 // request sent by a clent to retrieve a plan with the given ID
 message RetrievePlanRequest {
-  uint64 id = 1;
+  uint32 id = 1;
+  RetrieveType retrieve_type = 2;
+  uint32 timeout_ms = 3;
 }
 
 message StartPlanResponse {
-  uint64 id = 1;
+  uint32 id = 1;
   bool success = 2;
   // msg used to convey extra information to client; usually
   // for explaining cause of error
@@ -59,7 +71,7 @@ message StartPlanResponse {
 }
 
 message RetrievePlanResponse {
-  uint64 id = 1;
+  uint32 id = 1;
   bool success = 2;
   PlanPb plan = 3;
   // msg used to convey extra information to client; usually
