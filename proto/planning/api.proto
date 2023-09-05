@@ -31,11 +31,22 @@ message ParamsPb {
   string data = 1;
 }
 
-// runnable trajectory return type
+// system polynomial; a map of individual
+// polynomials to their respective target robots
 message SysPolyPb {
   map<string, PolyPb> data = 1;
 }
 
+// individual piecewise polynomial trajectory, uniquely defined by
+//   1) an array of "breaks", or points in time representing
+//      the intervals for constituent polynomials.
+//   2) an array of m-by-n matrices of coeffecient vectors, where
+//      a single constituent matrix uniquely defines a given
+//      polynomial. each matrix contains the coefficients of the
+//      underlying additive monomials.
+// note: the coeffecients are stored in this message type
+// as a vector of vectors, so care must be taken to properly
+// unpack this data into the appropriate structure
 message PolyPb {
   repeated double breaks = 1;
   uint32 rows = 2;
@@ -44,6 +55,7 @@ message PolyPb {
   repeated Coeffs coeffs = 4;
 }
 
+// a vector of coefficients for a single monomial
 message Coeffs {
   repeated double data = 1;
 }
