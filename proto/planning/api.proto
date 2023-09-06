@@ -19,26 +19,22 @@ message ProblemDefPb {
   SystemConfPb goal = 2;
   SystemConfPb start = 3;
   double orientation_tol = 4;
-  // bool use_columnar_constraint = 5;
+  bool use_columnar_constraint = 5;
   bool use_height_constraint = 6;
   string tool_frame = 7; // start conf frame? shouldn't have tool in planning_service
   double discretization = 8;
-  ParamsPb params = 9;
-  ConstraintsPb constraints = 10;
 }
 
-message ConstraintsPb {
-  // position constraints are similar to columnar constraints
-  bool use_position_constraint = 1;
-  string position_constraint_frame = 2;
-  repeated double position_constraint_lower_bound = 3;
-  repeated double position_constraint_upper_bound = 4;
-
-  // orientation constraints
-  bool use_angle_constraint = 5;
-  string angle_constraint_frame = 6; // won't this be the same as position_constraint_frame? maybe just use "current frame" or something?
-  repeated double angle_constraint_lower_bound = 7;
-  repeated double angle_constraint_upper_bound = 8;
+message ConstraintPb {
+  // constraint_type needs to match a Drake constraint - so Position or Angle or BoundingBox, etc
+  // if constraint type is unsupported, will return an error
+  string constraint_type = 1;
+  repeated double lower_bound = 2;
+  repeated double upper_bound = 3;
+  // these are not necessary for all constraint defs but some
+  // might already be defined in the params
+  string frame_a = 4;
+  string frame_b = 5;
 }
 
 // placeholder message type for "new" params (to be
@@ -51,8 +47,8 @@ message ParamsPb {
   repeated double world_axis = 5;
   string joint_position_limits = 6; // need convert to std::pair<VectorX<double>, VectorX<double>>
 
-  // workstation params; probably don't belong here - planning-service should not know about containers or utensils
-  // need to be reworked into constraints
+  // workstation params; these don't belong here - planning-service should not know about containers or utensils
+  // need to be reworked into constraints in TLE before sending
   // repeated double container_inner_dimensions = 6;
   // string utensil = 7;
   // string utensil_face_frame = 8;
@@ -130,6 +126,7 @@ message StartPlanRequest {
   string urdf = 3;
   ParamsPb params = 4;
   string legacy_params = 5; // TODO(@davebambrick): deprecate
+  repeated ConstraintPb constraints = 6;
 }
 
 message StartPlanResponse {
