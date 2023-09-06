@@ -28,7 +28,45 @@ message ProblemDefPb {
 // placeholder message type for "new" params (to be
 // used by GCS)
 message ParamsPb {
-  string data = 1;
+  string urdf = 1; // local reference to urdf
+  string link_name;
+  repeated double link_axis;
+  repeated double world_axis;
+  string joint_position_limits; // need convert to std::pair<VectorX<double>, VectorX<double>>
+
+  // probably doesnt belong here - planning-service should not know about containers or utensils
+  repeated double container_inner_dimensions;
+  string utensil_face_frame;
+  string utensil_centered_frame;
+  string utensil_tip_frame;
+  string utensil_tip_floating_frame;
+  string container_frame;
+
+  // OMPL params (will we still need these?)
+  double max_solve_time;
+  double position_tolerance;
+  double orientation_tolerance;
+  double collision_buffer_meters;
+
+  bool check_plan_validity; // true by default? why wouldnt we want this?
+  string robot_name;
+  double collision_cost_scale;
+  double orientation_cost_scale;
+  double stretch_factor;
+  double sparse_delta;
+  double dense_delta;
+  double roadmap_granularity;
+  bool dense_roadmap;
+  bool use_cost_as_edge_weight;
+  double heuristic_scaling;
+  bool collision_check_on_recall;
+  double recall_time_cap;
+
+  // offline solving params
+  bool attempt_database_insertion;
+  bool attempt_linear_solution; // dont need? will do by default?
+  bool check_connected_components; // insert nodes that connect components in the roadmap
+
 }
 
 // system polynomial; a map of individual
