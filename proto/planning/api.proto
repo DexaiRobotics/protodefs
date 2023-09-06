@@ -19,10 +19,26 @@ message ProblemDefPb {
   SystemConfPb goal = 2;
   SystemConfPb start = 3;
   double orientation_tol = 4;
-  bool use_columnar_constraint = 5;
+  // bool use_columnar_constraint = 5;
   bool use_height_constraint = 6;
-  string tool_frame = 7;
+  string tool_frame = 7; // start conf frame? shouldn't have tool in planning_service
   double discretization = 8;
+  ParamsPb params = 9;
+  ConstraintsPb constraints = 10;
+}
+
+message ConstraintsPb {
+  // position constraints are similar to columnar constraints
+  bool use_position_constraint = 1;
+  string position_constraint_frame = 2;
+  repeated double position_constraint_lower_bound = 3;
+  repeated double position_constraint_upper_bound = 4;
+
+  // orientation constraints
+  bool use_angle_constraint = 5;
+  string angle_constraint_frame = 6; // won't this be the same as position_constraint_frame? maybe just use "current frame" or something?
+  repeated double angle_constraint_lower_bound = 7;
+  repeated double angle_constraint_upper_bound = 8;
 }
 
 // placeholder message type for "new" params (to be
@@ -36,44 +52,45 @@ message ParamsPb {
   string joint_position_limits = 6; // need convert to std::pair<VectorX<double>, VectorX<double>>
 
   // workstation params; probably don't belong here - planning-service should not know about containers or utensils
-  repeated double container_inner_dimensions;
-  string utensil = 7;
-  string utensil_face_frame = 8;
-  string utensil_tag_frame = 9;
-  string utensil_tc_frame = 10;
-  string utensil_tip_frame = 11;
-  string utensil_tip_floating_frame = 12;
-  string utensil_centered_frame = 13;
-  string container_frame = 14;
-  string cobot_ee_frame = 15;
-  repeated string ee_frame_names = 16;
+  // need to be reworked into constraints
+  // repeated double container_inner_dimensions = 6;
+  // string utensil = 7;
+  // string utensil_face_frame = 8;
+  // string utensil_tag_frame = 9;
+  // string utensil_tc_frame = 10;
+  // string utensil_tip_frame = 11;
+  // string utensil_tip_floating_frame = 12;
+  // string utensil_centered_frame = 13;
+  // string container_frame = 14;
+  // string cobot_ee_frame = 15;
+  // repeated string ee_frame_names = 16;
 
   // OMPL params (will we still need these?)
-  double max_solve_time = 17;
-  double position_tolerance = 18;
-  double orientation_tolerance = 19;
-  double collision_buffer_meters = 20;
+  double max_solve_time = 7;
+  double position_tolerance = 8;
+  double orientation_tolerance = 9;
+  double collision_buffer_meters = 10;
 
-  bool check_plan_validity = 21; // true by default? why wouldnt we want this?
-  double collision_cost_scale = 22;
-  double orientation_cost_scale = 23;
-  double stretch_factor = 24;
-  double dense_delta = 25;
-  bool dense_roadmap = 26;
-  double heuristic_scaling = 27;
+  bool check_plan_validity = 11; // true by default? why wouldnt we want this?
+  double collision_cost_scale = 12;
+  double orientation_cost_scale = 13;
+  double stretch_factor = 14;
+  double dense_delta = 15;
+  bool dense_roadmap = 16;
+  double heuristic_scaling = 17;
 
   // recall from database
-  bool recall = 28;
-  double recall_time_cap_seconds = 29;
-  bool collision_check_on_recall = 30;
+  bool recall = 18;
+  double recall_time_cap_seconds = 19;
+  bool collision_check_on_recall = 20;
 
   // offline solving params
-  double roadmap_granularity = 31;
-  double sparse_delta = 32;
-  bool attempt_database_insertion = 33;
-  bool attempt_linear_solution = 34; // dont need? will do by default?
-  bool check_connected_components = 35; // insert nodes that connect components in the roadmap
-  bool use_cost_as_edge_weight = 36; // true by default?
+  double roadmap_granularity = 21;
+  double sparse_delta = 22;
+  bool attempt_database_insertion = 23;
+  bool attempt_linear_solution = 24; // dont need? will do by default?
+  bool check_connected_components = 25; // insert nodes that connect components in the roadmap
+  bool use_cost_as_edge_weight = 26; // true by default?
 }
 
 // system polynomial; a map of individual
