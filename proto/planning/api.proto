@@ -21,7 +21,6 @@ message ProblemDefPb {
   double orientation_tol = 4;
   bool use_columnar_constraint = 5;
   bool use_height_constraint = 6;
-  string tool_frame = 7; // start conf frame? shouldn't have tool in planning_service
   double discretization = 8;
 }
 
@@ -68,20 +67,6 @@ message ParamsPb {
   bool attempt_linear_solution = 24; // dont need? will do by default?
   bool check_connected_components = 25; // insert nodes that connect components in the roadmap
   bool use_cost_as_edge_weight = 26; // true by default?
-
-  // LEGACY workstation params; these don't belong here - planning-service should not know about containers or utensils
-  // need to be reworked into constraints in TLE before sending
-  // repeated double container_inner_dimensions = 26;
-  // string utensil = 27;
-  // string utensil_face_frame = 28;
-  // string utensil_tag_frame = 29;
-  // string utensil_tc_frame = 30;
-  // string utensil_tip_frame = 31;
-  // string utensil_tip_floating_frame = 32;
-  // string utensil_centered_frame = 33;
-  // string container_frame = 34;
-  // string cobot_ee_frame = 35;
-  // repeated string ee_frame_names = 36;
 }
 
 // system polynomial; a map of individual
