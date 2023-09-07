@@ -31,10 +31,6 @@ message ConstraintPb {
   string constraint_type = 1;
   repeated double lower_bound = 2;
   repeated double upper_bound = 3;
-  // these are not necessary for all constraint defs but some
-  // might already be defined in the params
-  string frame_a = 4;
-  string frame_b = 5;
 }
 
 // placeholder message type for "new" params (to be
@@ -47,27 +43,12 @@ message ParamsPb {
   repeated double world_axis = 5;
   string joint_position_limits = 6; // need convert to std::pair<VectorX<double>, VectorX<double>>
 
-  // workstation params; these don't belong here - planning-service should not know about containers or utensils
-  // need to be reworked into constraints in TLE before sending
-  // repeated double container_inner_dimensions = 6;
-  // string utensil = 7;
-  // string utensil_face_frame = 8;
-  // string utensil_tag_frame = 9;
-  // string utensil_tc_frame = 10;
-  // string utensil_tip_frame = 11;
-  // string utensil_tip_floating_frame = 12;
-  // string utensil_centered_frame = 13;
-  // string container_frame = 14;
-  // string cobot_ee_frame = 15;
-  // repeated string ee_frame_names = 16;
-
-  // OMPL params (will we still need these?)
+  // planning params
   double max_solve_time = 7;
   double position_tolerance = 8;
   double orientation_tolerance = 9;
   double collision_buffer_meters = 10;
-
-  bool check_plan_validity = 11; // true by default? why wouldnt we want this?
+  bool check_plan_validity = 11;
   double collision_cost_scale = 12;
   double orientation_cost_scale = 13;
   double stretch_factor = 14;
@@ -87,6 +68,20 @@ message ParamsPb {
   bool attempt_linear_solution = 24; // dont need? will do by default?
   bool check_connected_components = 25; // insert nodes that connect components in the roadmap
   bool use_cost_as_edge_weight = 26; // true by default?
+
+  // LEGACY workstation params; these don't belong here - planning-service should not know about containers or utensils
+  // need to be reworked into constraints in TLE before sending
+  // repeated double container_inner_dimensions = 26;
+  // string utensil = 27;
+  // string utensil_face_frame = 28;
+  // string utensil_tag_frame = 29;
+  // string utensil_tc_frame = 30;
+  // string utensil_tip_frame = 31;
+  // string utensil_tip_floating_frame = 32;
+  // string utensil_centered_frame = 33;
+  // string container_frame = 34;
+  // string cobot_ee_frame = 35;
+  // repeated string ee_frame_names = 36;
 }
 
 // system polynomial; a map of individual
