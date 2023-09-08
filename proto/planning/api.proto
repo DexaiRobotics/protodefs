@@ -1,0 +1,110 @@
+syntax = "proto3";
+
+
+// Joint configuration for a single robot
+message ConfPb {
+  repeated double data = 1;
+}
+
+// "System configuration", legacy type mapping individual robots
+// to respective independent configurations
+message SystemConfPb {
+  map<string, ConfPb> data = 1;
+}
+
+// all data required to uniquely define a planning problem
+// (alongside the problem URDF)
+message ProblemDefPb {
+  string name = 1;
+  SystemConfPb goal = 2;
+  SystemConfPb start = 3;
+  double orientation_tol = 4;
+  bool use_columnar_constraint = 5;
+  bool use_height_constraint = 6;
+  string tool_frame = 7;
+  double discretization = 8;
+}
+
+// placeholder message type for "new" params (to be
+// used by GCS)
+message ParamsPb {
+  string data = 1;
+}
+
+// system polynomial; a map of individual
+// polynomials to their respective target robots
+message SysPolyPb {
+  map<string, PolyPb> data = 1;
+}
+
+// individual piecewise polynomial trajectory, uniquely defined by
+//   1) an array of "breaks", or points in time representing
+//      the intervals for constituent polynomials.
+//   2) an array of m-by-n matrices of coeffecient vectors, where
+//      a single constituent matrix uniquely defines a given
+//      polynomial. each matrix contains the coefficients of the
+//      underlying additive monomials.
+// note: the coeffecients are stored in this message type
+// as a vector of vectors, so care must be taken to properly
+// unpack this data into the appropriate structure
+message PolyPb {
+  repeated double breaks = 1;
+  uint32 rows = 2;
+  uint32 cols = 3;
+  // vector of monomial coefficients
+  repeated Coeffs coeffs = 4;
+}
+
+// a vector of coefficients for a single monomial
+message Coeffs {
+  repeated double data = 1;
+}
+
+
+// request sent by a client to start a given plan
+message StartPlanRequest {
+  uint32 id = 1;
+  ProblemDefPb def = 2;
+  string urdf = 3;
+  ParamsPb params = 4;
+  string legacy_params = 5; // TODO(@davebambrick): deprecate
+}
+
+message StartPlanResponse {
+  uint32 id = 1;
+  bool success = 2;
+  // msg used to convey extra information to client; usually
+  // for explaining cause of error
+  string msg = 4;
+}
+
+// retrieve type dictating the behavior when retrieving a given plan
+enum RetrieveType {
+  // block until the plan is ready
+  BLOCKING = 0;
+  // only retrieve if ready
+  IF_READY = 1;
+  // wait for a give timeout
+  WITH_TIMEOUT = 2;
+}
+// request sent by a client to retrieve a plan with the given ID
+message RetrievePlanRequest {
+  uint32 id = 1;
+  RetrieveType retrieve_type = 2;
+  uint32 timeout_ms = 3;
+}
+
+message RetrievePlanResponse {
+  uint32 id = 1;
+  bool success = 2;
+  SysPolyPb plan = 3;
+  // msg used to convey extra information to client; usually
+  // for explaining cause of error
+  string msg = 4;
+}
+
+service MotionPlanner {
+  rpc HandleStartRequest(StartPlanRequest) returns (StartPlanResponse) {}
+  rpc HandleRetrieveRequest(RetrievePlanRequest) returns (RetrievePlanResponse) {}
+}
+
