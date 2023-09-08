@@ -119,17 +119,18 @@ message StartPlanResponse {
 
 // retrieve type dictating the behavior when retrieving a given plan
 enum RetrieveType {
+  UNSPECIFIED = 0;
   // block until the plan is ready
-  BLOCKING = 0;
+  BLOCKING = 1;
   // only retrieve if ready
-  IF_READY = 1;
+  IF_READY = 2;
   // wait for a give timeout
-  WITH_TIMEOUT = 2;
+  WITH_TIMEOUT = 3;
 }
 // request sent by a client to retrieve a plan with the given ID
 message RetrievePlanRequest {
   uint32 id = 1;
-  RetrieveType retrieve_type = 2;
+  RetrieveType retrieve_type = 2 [default = BLOCKING];
   uint32 timeout_ms = 3;
 }
 
