@@ -35,29 +35,30 @@ message Constraint {
 // placeholder message type for "new" params (to be
 // used by GCS)
 message Params {
-  string robot_name = 1;
-  string link_name = 2;
-  repeated double link_axis = 3;
-  repeated double world_axis = 4;
-  string joint_position_limits = 5; // need convert to std::pair<VectorX<double>, VectorX<double>>
+  string system_name = 1;
+  string robot_name = 2;
+  string link_name = 3;
+  repeated double link_axis = 4;
+  repeated double world_axis = 5;
+  string joint_position_limits = 6; // need convert to std::pair<VectorX<double>, VectorX<double>>
 
   // planning params
-  double max_solve_time = 6;
-  double position_tolerance = 7;
-  double orientation_tolerance = 8;
-  double collision_buffer_meters = 9;
-  bool check_plan_validity = 10;
-  double collision_cost_scale = 11;
-  double orientation_cost_scale = 12;
-  double stretch_factor = 13;
-  double dense_delta = 14;
-  bool dense_roadmap = 15;
-  double heuristic_scaling = 16;
+  double max_solve_time = 7;
+  double position_tolerance = 8;
+  double orientation_tolerance = 9;
+  double collision_buffer_meters = 10;
+  bool check_plan_validity = 11;
+  double collision_cost_scale = 12;
+  double orientation_cost_scale = 13;
+  double stretch_factor = 14;
+  double dense_delta = 15;
+  bool dense_roadmap = 16;
+  double heuristic_scaling = 17;
 
   // recall from database
-  bool recall = 17;
-  double recall_time_cap_seconds = 18;
-  bool collision_check_on_recall = 19;
+  bool recall = 18;
+  double recall_time_cap_seconds = 19;
+  bool collision_check_on_recall = 20;
 }
 
 // system polynomial; a map of individual
