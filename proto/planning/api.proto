@@ -92,7 +92,7 @@ message Coeffs {
 
 // request sent by a client to start a given plan
 message StartPlanRequest {
-  uint32 id = 1;
+  string id = 1;
   ProblemDefPb def = 2;
   string urdf = 3;
   ParamsPb params = 4;
@@ -101,7 +101,7 @@ message StartPlanRequest {
 }
 
 message StartPlanResponse {
-  uint32 id = 1;
+  string id = 1;
   bool success = 2;
   // msg used to convey extra information to client; usually
   // for explaining cause of error
@@ -120,13 +120,13 @@ enum RetrieveType {
 }
 // request sent by a client to retrieve a plan with the given ID
 message RetrievePlanRequest {
-  uint32 id = 1;
-  RetrieveType retrieve_type = 2 [default = BLOCKING];
+  string id = 1;
+  RetrieveType retrieve_type = 2;
   uint32 timeout_ms = 3;
 }
 
 message RetrievePlanResponse {
-  uint32 id = 1;
+  string id = 1;
   bool success = 2;
   SysPolyPb plan = 3;
   // msg used to convey extra information to client; usually
