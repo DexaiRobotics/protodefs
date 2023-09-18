@@ -24,7 +24,7 @@ message ProblemDefPb {
   double discretization = 8;
 }
 
-message ConstraintPb {
+message Constraint {
   // constraint_type needs to match a Drake constraint - so Position or Angle or BoundingBox, etc
   // if constraint type is unsupported, will return an error
   string constraint_type = 1;
@@ -34,7 +34,7 @@ message ConstraintPb {
 
 // placeholder message type for "new" params (to be
 // used by GCS)
-message ParamsPb {
+message Params {
   string robot_name = 1;
   string link_name = 2;
   repeated double link_axis = 3;
@@ -95,9 +95,9 @@ message StartPlanRequest {
   string id = 1;
   ProblemDefPb def = 2;
   string urdf = 3;
-  ParamsPb params = 4;
+  Params params = 4;
   string legacy_params = 5; // TODO(@davebambrick): deprecate
-  repeated ConstraintPb constraints = 6;
+  repeated Constraint constraints = 6;
 }
 
 message StartPlanResponse {
