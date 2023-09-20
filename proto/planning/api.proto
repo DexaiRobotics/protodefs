@@ -27,9 +27,15 @@ message ProblemDefPb {
 message Constraint {
   // constraint_type needs to match a Drake constraint - so Position or Angle or BoundingBox, etc
   // if constraint type is unsupported, will return an error
+  // constraints currently supported: position box constraint, angle constraints, orientation constraints
   string constraint_type = 1;
-  repeated double lower_bound = 2;
-  repeated double upper_bound = 3;
+  string frame_A = 2;
+  string frame_B = 3;
+  // context of constraints is dependent on type - see drake docs
+  repeated double frame_A_constraint = 4;
+  repeated double frame_B_constraint = 5;
+  // only used for orientation constraints
+  double theta_bound = 6;
 }
 
 // placeholder message type for "new" params (to be
