@@ -23,48 +23,73 @@ message ProblemDefPb {
   bool use_height_constraint = 6;
   double discretization = 8;
 }
+// Constrains the position of a point Q, rigidly attached to a frame B, to be
+// within a bounding box measured and expressed in frame A.
+// Reference: https://drake.mit.edu/doxygen_cxx/classdrake_1_1multibody_1_1_position_constraint.html
+message PositionConstraint {
+  string frame_A = 1;
+  string frame_B = 2;
+  repeated double p_AQ_lower = 3;
+  repeated double p_AQ_upper = 4;
 
-message Constraint {
-  // constraint_type needs to match a Drake constraint - so Position or Angle or BoundingBox, etc
-  // if constraint type is unsupported, will return an error
-  // constraints currently supported: position box constraint, angle constraints, orientation constraints
-  string constraint_type = 1;
-  string frame_A = 2;
-  string frame_B = 3;
-  // context of constraints is dependent on type - see drake docs
-  repeated double frame_A_constraint = 4;
-  repeated double frame_B_constraint = 5;
-  // only used for orientation constraints
-  double theta_bound = 6;
+  repeated double p_BQ = 5;
+}
+// Constrains that the angle difference θ between the orientation of frame A
+// and the orientation of frame B to satisfy θ ≤ θ_bound.
+// Reference: https://drake.mit.edu/doxygen_cxx/classdrake_1_1multibody_1_1_orientation_constraint.html
+message OrientationConstraint {
+  string frame_Abar = 1;
+  string frame_Bbar = 2;
+  repeated double R_AbarA = 3;
+  repeated double R_Bbar_B = 4;
+
+   double theta_bound = 5;
+}
+// Constrains that the angle between a vector a and another vector b is
+// between [θ_lower, θ_upper].
+// Reference: https://drake.mit.edu/doxygen_cxx/classdrake_1_1multibody_1_1_angle_between_vectors_constraint.html
+message AngleBetweenVectorsConstraint {
+  string frame_A = 1;
+  string frame_B = 2;
+  repeated double a_A = 3;
+  repeated double b_B = 4;
+
+  double angle_lower = 5;
+  double angle_upper = 6;
 }
 
+message JointLimitsPb {
+  repeated double lower = 1;
+  repeated double upper = 2;
+}
 // placeholder message type for "new" params (to be
 // used by GCS)
 message Params {
   string system_name = 1;
-  string robot_name = 2;
-  string link_name = 3;
-  repeated double link_axis = 4;
-  repeated double world_axis = 5;
-  string joint_position_limits = 6; // need convert to std::pair<VectorX<double>, VectorX<double>>
+  string model_directive = 2;
+  string robot_name = 3;
+  string link_name = 4;
+  repeated double link_axis = 5;
+  repeated double world_axis = 6;
+  JointLimitsPb joint_position_limits = 7; // need convert to std::pair<VectorX<double>, VectorX<double>>
 
   // planning params
-  double max_solve_time = 7;
-  double position_tolerance = 8;
-  double orientation_tolerance = 9;
-  double collision_buffer_meters = 10;
-  bool check_plan_validity = 11;
-  double collision_cost_scale = 12;
-  double orientation_cost_scale = 13;
-  double stretch_factor = 14;
-  double dense_delta = 15;
-  bool dense_roadmap = 16;
-  double heuristic_scaling = 17;
+  double max_solve_time = 8;
+  double position_tolerance = 9;
+  double orientation_tolerance = 10;
+  double collision_buffer_meters = 11;
+  bool check_plan_validity = 12;
+  double collision_cost_scale = 13;
+  double orientation_cost_scale = 14;
+  double stretch_factor = 15;
+  double dense_delta = 16;
+  bool dense_roadmap = 17;
+  double heuristic_scaling = 18;
 
   // recall from database
-  bool recall = 18;
-  double recall_time_cap_seconds = 19;
-  bool collision_check_on_recall = 20;
+  bool recall = 19;
+  double recall_time_cap_seconds = 20;
+  bool collision_check_on_recall = 21;
 }
 
 // system polynomial; a map of individual
@@ -101,10 +126,10 @@ message Coeffs {
 message StartPlanRequest {
   string id = 1;
   ProblemDefPb def = 2;
-  string urdf = 3;
-  Params params = 4;
-  string legacy_params = 5; // TODO(@davebambrick): deprecate
-  repeated Constraint constraints = 6;
+  Params params = 3;
+  string legacy_params = 4; // TODO(@davebambrick): deprecate
+  repeated PositionConstraint pos_constraints = 5;
+  repeated AngleBetweenVectorsConstraint angle_constraints = 6;
 }
 
 message StartPlanResponse {
@@ -112,7 +137,7 @@ message StartPlanResponse {
   bool success = 2;
   // msg used to convey extra information to client; usually
   // for explaining cause of error
-  string msg = 4;
+  string msg = 3;
 }
 
 // retrieve type dictating the behavior when retrieving a given plan
