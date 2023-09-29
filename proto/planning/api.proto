@@ -1,27 +1,28 @@
 syntax = "proto3";
 
 
+package proto;
 // Joint configuration for a single robot
-message ConfPb {
+message Conf {
   repeated double data = 1;
 }
 
 // "System configuration", legacy type mapping individual robots
 // to respective independent configurations
-message SystemConfPb {
-  map<string, ConfPb> data = 1;
+message SystemConf {
+  map<string, Conf> data = 1;
 }
 
 // all data required to uniquely define a planning problem
 // (alongside the problem URDF)
-message ProblemDefPb {
+message ProblemDef {
   string name = 1;
-  SystemConfPb goal = 2;
-  SystemConfPb start = 3;
+  SystemConf goal = 2;
+  SystemConf start = 3;
   double orientation_tol = 4;
   bool use_columnar_constraint = 5;
   bool use_height_constraint = 6;
-  double discretization = 8;
+  double discretization = 7;
 }
 // Constrains the position of a point Q, rigidly attached to a frame B, to be
 // within a bounding box measured and expressed in frame A.
@@ -31,19 +32,7 @@ message PositionConstraint {
   string frame_B = 2;
   repeated double p_AQ_lower = 3;
   repeated double p_AQ_upper = 4;
-
   repeated double p_BQ = 5;
-}
-// Constrains that the angle difference θ between the orientation of frame A
-// and the orientation of frame B to satisfy θ ≤ θ_bound.
-// Reference: https://drake.mit.edu/doxygen_cxx/classdrake_1_1multibody_1_1_orientation_constraint.html
-message OrientationConstraint {
-  string frame_Abar = 1;
-  string frame_Bbar = 2;
-  repeated double R_AbarA = 3;
-  repeated double R_Bbar_B = 4;
-
-   double theta_bound = 5;
 }
 // Constrains that the angle between a vector a and another vector b is
 // between [θ_lower, θ_upper].
@@ -53,15 +42,22 @@ message AngleBetweenVectorsConstraint {
   string frame_B = 2;
   repeated double a_A = 3;
   repeated double b_B = 4;
-
   double angle_lower = 5;
   double angle_upper = 6;
 }
+// Collection of all constraints enforced on the given plan
+message Constraints {
+  repeated PositionConstraint pos_constraints = 1;
+  repeated AngleBetweenVectorsConstraint angle_constraints = 2;
+  // TODO(@davebambrick): Add collision checking
+}
 
-message JointLimitsPb {
+// Joint limits for each joint in the system
+message JointLimits {
   repeated double lower = 1;
   repeated double upper = 2;
 }
+
 // placeholder message type for "new" params (to be
 // used by GCS)
 message Params {
@@ -71,7 +67,7 @@ message Params {
   string link_name = 4;
   repeated double link_axis = 5;
   repeated double world_axis = 6;
-  JointLimitsPb joint_position_limits = 7; // need convert to std::pair<VectorX<double>, VectorX<double>>
+  JointLimits joint_position_limits = 7; // need convert to std::pair<VectorX<double>, VectorX<double>>
 
   // planning params
   double max_solve_time = 8;
@@ -94,8 +90,8 @@ message Params {
 
 // system polynomial; a map of individual
 // polynomials to their respective target robots
-message SysPolyPb {
-  map<string, PolyPb> data = 1;
+message SysPoly {
+  map<string, Poly> data = 1;
 }
 
 // individual piecewise polynomial trajectory, uniquely defined by
@@ -108,7 +104,7 @@ message SysPolyPb {
 // note: the coeffecients are stored in this message type
 // as a vector of vectors, so care must be taken to properly
 // unpack this data into the appropriate structure
-message PolyPb {
+message Poly {
   repeated double breaks = 1;
   uint32 rows = 2;
   uint32 cols = 3;
@@ -121,15 +117,13 @@ message Coeffs {
   repeated double data = 1;
 }
 
-
 // request sent by a client to start a given plan
 message StartPlanRequest {
   string id = 1;
-  ProblemDefPb def = 2;
+  ProblemDef def = 2;
   Params params = 3;
   string legacy_params = 4; // TODO(@davebambrick): deprecate
-  repeated PositionConstraint pos_constraints = 5;
-  repeated AngleBetweenVectorsConstraint angle_constraints = 6;
+  Constraints constraints = 5;
 }
 
 message StartPlanResponse {
@@ -160,7 +154,7 @@ message RetrievePlanRequest {
 message RetrievePlanResponse {
   string id = 1;
   bool success = 2;
-  SysPolyPb plan = 3;
+  SysPoly plan = 3;
   // msg used to convey extra information to client; usually
   // for explaining cause of error
   string msg = 4;
