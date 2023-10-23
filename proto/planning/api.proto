@@ -117,15 +117,22 @@ message Coeffs {
   repeated double data = 1;
 }
 
-// request sent by a client to start a given plan
+/**
+ * gRPC request to start solving a motion plan defined by the provided information. Contains:
+ *   - a ProblemDef, which contains the start and goal and some solver parameters
+ *   - a set of Parameters which define the system name and model
+ *   - a set of Constraints which will be imposed on the given attempted solution
+ */
 message StartPlanRequest {
   string id = 1;
   ProblemDef def = 2;
   Params params = 3;
-  string legacy_params = 4; // TODO(@davebambrick): deprecate
-  Constraints constraints = 5;
+  Constraints constraints = 4;
 }
-
+/**
+ * gRPC response for a StartPlanRequest. Returns a bool indicating success, and optionally,
+ * an informative message.
+ */
 message StartPlanResponse {
   string id = 1;
   bool success = 2;
@@ -134,7 +141,7 @@ message StartPlanResponse {
   string msg = 3;
 }
 
-// retrieve type dictating the behavior when retrieving a given plan
+/** Retrieve type dictating the behavior when retrieving a given plan. */
 enum RetrieveType {
   UNSPECIFIED = 0;
   // block until the plan is ready
@@ -144,13 +151,20 @@ enum RetrieveType {
   // wait for a give timeout
   WITH_TIMEOUT = 3;
 }
-// request sent by a client to retrieve a plan with the given ID
+/**
+ * gRPC request to retrieve a motion plan solution with a given ID and RetrieveType.
+ * If a RetrieveType of WITH_TIMEOUT is selected, the planner will block for the duration
+ * provided by the timeout_ms field.
+ */
 message RetrievePlanRequest {
   string id = 1;
   RetrieveType retrieve_type = 2;
   uint32 timeout_ms = 3;
 }
-
+/**
+ * gRPC response for a RetrievePlanRequest. On success, returns a system polynomial
+ * corresponding with the named subsystems of the client system.
+ */
 message RetrievePlanResponse {
   string id = 1;
   bool success = 2;
@@ -161,7 +175,9 @@ message RetrievePlanResponse {
 }
 
 service MotionPlanner {
+  /** Callback signature for StartPlanRequests. */
   rpc HandleStartRequest(StartPlanRequest) returns (StartPlanResponse) {}
+  /** Callback signature for RetrievePlanRequest. */
   rpc HandleRetrieveRequest(RetrievePlanRequest) returns (RetrievePlanResponse) {}
 }
 
