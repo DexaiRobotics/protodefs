@@ -1,6 +1,6 @@
 # Protodefs
 
-Repository holding `protobuf` Message definitions and `gRPC` Service definitions.
+Repository holding `protobuf` Message definitions and `gRPC` Service definitions for the `PlanningService`.
 
 ## Requirements
 Your project will require both [gRPC](https://grpc.io) and [Protobuf](https://protobuf.dev) to generate code from these definitions, as well as respective build rules for each.
