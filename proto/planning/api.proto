@@ -1,131 +1,16 @@
 syntax = "proto3";
 
-
 package proto;
-// Joint configuration for a single robot
-message Conf {
-  repeated double data = 1;
-}
 
-// "System configuration", legacy type mapping individual robots
-// to respective independent configurations
-message SystemConf {
-  map<string, Conf> data = 1;
-}
-
-// all data required to uniquely define a planning problem
-// (alongside the problem URDF)
-message ProblemDef {
-  string name = 1;
-  SystemConf goal = 2;
-  SystemConf start = 3;
-  double orientation_tol = 4;
-  bool use_columnar_constraint = 5;
-  bool use_height_constraint = 6;
-  double discretization = 7;
-}
-// Constrains the position of a point Q, rigidly attached to a frame B, to be
-// within a bounding box measured and expressed in frame A.
-// Reference: https://drake.mit.edu/doxygen_cxx/classdrake_1_1multibody_1_1_position_constraint.html
-message PositionConstraint {
-  string frame_A = 1;
-  string frame_B = 2;
-  repeated double p_AQ_lower = 3;
-  repeated double p_AQ_upper = 4;
-  repeated double p_BQ = 5;
-}
-// Constrains that the angle between a vector a and another vector b is
-// between [θ_lower, θ_upper].
-// Reference: https://drake.mit.edu/doxygen_cxx/classdrake_1_1multibody_1_1_angle_between_vectors_constraint.html
-message AngleBetweenVectorsConstraint {
-  string frame_A = 1;
-  string frame_B = 2;
-  repeated double a_A = 3;
-  repeated double b_B = 4;
-  double angle_lower = 5;
-  double angle_upper = 6;
-}
-// Collection of all constraints enforced on the given plan
-message Constraints {
-  repeated PositionConstraint pos_constraints = 1;
-  repeated AngleBetweenVectorsConstraint angle_constraints = 2;
-  // TODO(@davebambrick): Add collision checking
-}
-
-// Joint limits for each joint in the system
-message JointLimits {
-  repeated double lower = 1;
-  repeated double upper = 2;
-}
-
-// placeholder message type for "new" params (to be
-// used by GCS)
-message Params {
-  string system_name = 1;
-  string model_directive = 2;
-  string robot_name = 3;
-  string link_name = 4;
-  repeated double link_axis = 5;
-  repeated double world_axis = 6;
-  JointLimits joint_position_limits = 7; // need convert to std::pair<VectorX<double>, VectorX<double>>
-
-  // planning params
-  double max_solve_time = 8;
-  double position_tolerance = 9;
-  double orientation_tolerance = 10;
-  double collision_buffer_meters = 11;
-  bool check_plan_validity = 12;
-  double collision_cost_scale = 13;
-  double orientation_cost_scale = 14;
-  double stretch_factor = 15;
-  double dense_delta = 16;
-  bool dense_roadmap = 17;
-  double heuristic_scaling = 18;
-
-  // recall from database
-  bool recall = 19;
-  double recall_time_cap_seconds = 20;
-  bool collision_check_on_recall = 21;
-}
-
-// system polynomial; a map of individual
-// polynomials to their respective target robots
-message SysPoly {
-  map<string, Poly> data = 1;
-}
-
-// individual piecewise polynomial trajectory, uniquely defined by
-//   1) an array of "breaks", or points in time representing
-//      the intervals for constituent polynomials.
-//   2) an array of m-by-n matrices of coeffecient vectors, where
-//      a single constituent matrix uniquely defines a given
-//      polynomial. each matrix contains the coefficients of the
-//      underlying additive monomials.
-// note: the coeffecients are stored in this message type
-// as a vector of vectors, so care must be taken to properly
-// unpack this data into the appropriate structure
-message Poly {
-  repeated double breaks = 1;
-  uint32 rows = 2;
-  uint32 cols = 3;
-  // vector of monomial coefficients
-  repeated Coeffs coeffs = 4;
-}
-
-// a vector of coefficients for a single monomial
-message Coeffs {
-  repeated double data = 1;
-}
-
-// request sent by a client to start a given plan
+/** Request containing all information necessary to uniquely define a planning
+ * problem in a format accepted by the planner. */
 message StartPlanRequest {
   string id = 1;
   ProblemDef def = 2;
-  Params params = 3;
-  string legacy_params = 4; // TODO(@davebambrick): deprecate
-  Constraints constraints = 5;
+  string legacy_params = 4;  // TODO(@davebambrick): deprecate
 }
-
+/** Response which contains the result of attempting to start computation of a
+ * solution for the corresponding StartPlanRequest. */
 message StartPlanResponse {
   string id = 1;
   bool success = 2;
@@ -134,34 +19,44 @@ message StartPlanResponse {
   string msg = 3;
 }
 
-// retrieve type dictating the behavior when retrieving a given plan
+/** Enum which controls plan retrieval behavior for a given RetrievePlanRequest.
+ * Retrieval behavior is as follows:
+ *   - UNSPECIFIED. Default value
+ *   - BLOCKING. Wait indefinitely for the computation of the plan to complete.
+ *   - IF_READY. Only return if computation is completed at the time of reciept
+ *     of the request. Equivalent to a timeout of length zero.
+ *   - WITH_TIMEOUT. Wait for a maximum interval of timeout_ms for computation
+ *     to complete before returning failure.
+ */
 enum RetrieveType {
   UNSPECIFIED = 0;
-  // block until the plan is ready
   BLOCKING = 1;
-  // only retrieve if ready
   IF_READY = 2;
-  // wait for a give timeout
   WITH_TIMEOUT = 3;
 }
-// request sent by a client to retrieve a plan with the given ID
+/** Request to retrieve a plan with a unique ID, in the manner dictated by the
+ * given retrieval type. */
 message RetrievePlanRequest {
   string id = 1;
   RetrieveType retrieve_type = 2;
   uint32 timeout_ms = 3;
 }
 
+/** Response which contains the result of retrieving the plan with the given ID.
+ */
 message RetrievePlanResponse {
   string id = 1;
   bool success = 2;
-  SysPoly plan = 3;
   // msg used to convey extra information to client; usually
   // for explaining cause of error
-  string msg = 4;
+  string msg = 3;
+  SysPoly spline = 4;
+  Plan plan = 5;
+  Cost cost = 6;
 }
 
 service MotionPlanner {
   rpc HandleStartRequest(StartPlanRequest) returns (StartPlanResponse) {}
-  rpc HandleRetrieveRequest(RetrievePlanRequest) returns (RetrievePlanResponse) {}
+  rpc HandleRetrieveRequest(RetrievePlanRequest)
+      returns (RetrievePlanResponse) {}
 }
-
