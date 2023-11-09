@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+import "proto/planning/types.proto";
 package proto;
 
 /** Request containing all information necessary to uniquely define a planning
@@ -7,7 +8,7 @@ package proto;
 message StartPlanRequest {
   string id = 1;
   ProblemDef def = 2;
-  string legacy_params = 4;  // TODO(@davebambrick): deprecate
+  string legacy_params = 3;  // TODO(@davebambrick): deprecate
 }
 /** Response which contains the result of attempting to start computation of a
  * solution for the corresponding StartPlanRequest. */
@@ -19,21 +20,6 @@ message StartPlanResponse {
   string msg = 3;
 }
 
-/** Enum which controls plan retrieval behavior for a given RetrievePlanRequest.
- * Retrieval behavior is as follows:
- *   - UNSPECIFIED. Default value
- *   - BLOCKING. Wait indefinitely for the computation of the plan to complete.
- *   - IF_READY. Only return if computation is completed at the time of reciept
- *     of the request. Equivalent to a timeout of length zero.
- *   - WITH_TIMEOUT. Wait for a maximum interval of timeout_ms for computation
- *     to complete before returning failure.
- */
-enum RetrieveType {
-  UNSPECIFIED = 0;
-  BLOCKING = 1;
-  IF_READY = 2;
-  WITH_TIMEOUT = 3;
-}
 /** Request to retrieve a plan with a unique ID, in the manner dictated by the
  * given retrieval type. */
 message RetrievePlanRequest {
@@ -52,7 +38,6 @@ message RetrievePlanResponse {
   string msg = 3;
   SysPoly spline = 4;
   Plan plan = 5;
-  Cost cost = 6;
 }
 
 service MotionPlanner {

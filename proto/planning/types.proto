@@ -97,6 +97,10 @@ message ProblemDef {
   SystemConf start = 3;
   Parameters params = 4;
   Constraints constraints = 5;
+  // TODO(@davebambrick): deprecate ASAP
+  double orientation_tol = 6;
+  bool use_columnar_constraint = 7;
+  bool use_height_constraint = 8;
 }
 
 /** Parameters which provide supplemental information to the planner (f.e., what
@@ -105,7 +109,20 @@ message Parameters {
   string system_name = 1;
   string model_directive = 2;
   string robot_name = 3;
-  string link_name = 4;
-  repeated double link_axis = 5;
-  repeated double world_axis = 6;
+}
+
+/** Enum which controls plan retrieval behavior for a given RetrievePlanRequest.
+ * Retrieval behavior is as follows:
+ *   - UNSPECIFIED. Default value
+ *   - BLOCKING. Wait indefinitely for the computation of the plan to complete.
+ *   - IF_READY. Only return if computation is completed at the time of reciept
+ *     of the request. Equivalent to a timeout of length zero.
+ *   - WITH_TIMEOUT. Wait for a maximum interval of timeout_ms for computation
+ *     to complete before returning failure.
+ */
+enum RetrieveType {
+  UNSPECIFIED = 0;
+  BLOCKING = 1;
+  IF_READY = 2;
+  WITH_TIMEOUT = 3;
 }
