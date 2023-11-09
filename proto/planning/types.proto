@@ -43,8 +43,8 @@ message State {
   uint64 utime = 1;
   uint32 num_joints = 2;
   repeated string joint_name = 3;
-  repeated double joint_position = 4;
-  repeated double joint_velocity = 5;
+  repeated float joint_position = 4;
+  repeated float joint_velocity = 5;
 }
 
 /** A waypoint plan comprised of many robot states. */
