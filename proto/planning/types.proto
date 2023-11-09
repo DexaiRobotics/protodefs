@@ -45,6 +45,7 @@ message State {
   repeated string joint_name = 3;
   repeated float joint_position = 4;
   repeated float joint_velocity = 5;
+  repeated float joint_effort = 6;
 }
 
 /** A waypoint plan comprised of many robot states. */
