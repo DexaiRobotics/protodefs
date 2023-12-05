@@ -3,21 +3,15 @@ syntax = "proto3";
 package proto;
 
 /** Joint configuration for a single robot. */
-message Conf {
-  repeated double data = 1;
-}
+message Conf { repeated double data = 1; }
 
 /** "System configuration", a type mapping individual robots to respective
  * independent configurations. To be a valid configuration, all robots must be
  * specified. */
-message SystemConf {
-  map<string, Conf> data = 1;
-}
+message SystemConf { map<string, Conf> data = 1; }
 
 /** A vector of coefficients for a single monomial. */
-message Coeffs {
-  repeated double data = 1;
-}
+message Coeffs { repeated double data = 1; }
 
 /* Individual piecewise polynomial trajectory, uniquely defined by
  *   1) an array of "breaks", or points in time representing
@@ -37,27 +31,9 @@ message Poly {
   repeated Coeffs coeffs = 4;
 }
 
-/** A robot state which provides the joint position q(t) and velocity q'(t) for
- * utime t for N named joints.*/
-message State {
-  uint64 utime = 1;
-  uint32 num_joints = 2;
-  repeated string joint_name = 3;
-  repeated float joint_position = 4;
-  repeated float joint_velocity = 5;
-  repeated float joint_effort = 6;
-}
-
-/** A waypoint plan comprised of many robot states. */
-message Plan {
-  repeated State states = 1;
-}
-
 /** System polynomial; a map of individual polynomials to their respective
  * target robots. */
-message SysPoly {
-  map<string, Poly> data = 1;
-}
+message SysPoly { map<string, Poly> data = 1; }
 
 /** Constrains the position of a point Q, rigidly attached to a frame B, to be
  * within a bounding box measured and expressed in frame A.
@@ -71,9 +47,8 @@ message PositionConstraint {
   repeated double p_AQ_upper = 4;
   repeated double p_BQ = 5;
 }
-/** Constrains that the angle between a vector a and another vector b is
- * between [θ_lower, θ_upper].
- * Reference:
+/** Constrains the angle between a vector a and another vector b to be within
+ * the open interval [θ_lower, θ_upper]. Reference:
  * https://drake.mit.edu/doxygen_cxx/classdrake_1_1multibody_1_1_angle_between_vectors_constraint.html
  */
 message AngleBetweenVectorsConstraint {
