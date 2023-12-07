@@ -6,13 +6,13 @@
 #include <grpcpp/create_channel.h>
 #include <grpcpp/security/credentials.h>
 
-#include "proto/planning/api.grpc.pb.h"
+#include "api.grpc.pb.h"
 
 // aliases for readability
 using plan_id_t = uint16_t;
 using robot_conf_t = std::vector<double>;
 using system_conf_t = std::map<std::string, robot_conf_t>;
-using point_3d_t = std::array<3, double>;
+using point_3d_t = std::array<double, 3>;
 
 using proto::MotionPlanner;
 using proto::RetrievePlanRequest;
@@ -34,12 +34,12 @@ proto::PositionConstraint ConstructPositionConstraint(
     const std::string& frame_A, const std::string& frame_B,
     const point_3d_t& p_AQ_lower, const point_3d_t& p_AQ_upper);
 
-/** Convert a protobuf message representing a piecewise polynomial to its
- * corresponding Drake counterpart. */
-PPType ToPwisePoly(const proto::Poly& poly_pb);
-/** Convert a protobuf message representing a "system polynomial" to its
- * corresponding Drake counterpart. */
-system_poly_t ToSysPoly(const proto::SysPoly& sys_poly_pb);
+// /** Convert a protobuf message representing a piecewise polynomial to its
+//  * corresponding Drake counterpart. */
+// PPType ToPwisePoly(const proto::Poly& poly_pb);
+// /** Convert a protobuf message representing a "system polynomial" to its
+//  * corresponding Drake counterpart. */
+// system_poly_t ToSysPoly(const proto::SysPoly& sys_poly_pb);
 
 /**
  * @brief A simple client which can publish
@@ -48,18 +48,11 @@ system_poly_t ToSysPoly(const proto::SysPoly& sys_poly_pb);
 class MotionPlannerClient {
  public:
   MotionPlannerClient(const std::string& addr) {
-    channel_ =
-        grpc::CreateCustomChannel(addr, grpc::InsecureChannelCredentials());
+    channel_ = grpc::CreateChannel(addr, grpc::InsecureChannelCredentials());
     stub_ = MotionPlanner::NewStub(channel_);
   }
 
- private:
-  /**
-   * @brief Return a new ID
-   */
-  inline plan_id_t new_request_id() {
-    return last_id_++;
-  }
+ public:
   /**
    * @brief Send a StartPlanRequest to the planning service, and populate a
    * StartPlanResponse with the results.
@@ -85,7 +78,6 @@ class MotionPlannerClient {
   bool SendRetrieveRequest(const RetrievePlanRequest& req,
                            RetrievePlanResponse* resp);
 
-  std::atomic<plan_id_t> last_id_ {0};
   std::shared_ptr<grpc::Channel> channel_;
   std::unique_ptr<MotionPlanner::Stub> stub_;
 };
