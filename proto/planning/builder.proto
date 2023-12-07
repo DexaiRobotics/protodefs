@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+import "proto/planning/types.proto";
+package proto;
+
+/** Request containing all information necessary to start generating a set of
+ * IRIS regions for a given planning context. */
+message StartIrisBuildRequest {
+  string id = 1;
+  // contains information about the system geometry
+  Parameters parameters = 2;
+  // contains constraint information
+  Constraints constraints = 3;
+  // set of configurations; we will use these to construct planning problems
+  // synthetically
+  repeated SystemConf configurations = 4;
+}
+
+/** Response which contains the result of attempting to start computation of a
+ * solution for the corresponding StartIrisBuildRequest. */
+message StartIrisBuildResponse {
+  string id = 1;
+  bool success = 2;
+  // msg used to convey extra information to client; usually
+  // for explaining cause of error
+  string msg = 3;
+}
+
+/** Request to retrieve the status of a given IRIS region generation job with a
+ * unique ID. */
+message ReportIrisBuildStatusRequest { string id = 1; }
+
+/** Response which contains the result of retrieving the status of the job with
+ * the given ID. */
+message ReportIrisBuildStatusResponse {
+  string id = 1;
+
+  bool complete = 2;
+
+  string msg = 3;
+}
+
+service IrisBuilder {
+  rpc HandleStartRequest(StartIrisBuildRequest)
+      returns (StartIrisBuildResponse) {}
+  rpc HandleReportStatusRequest(ReportIrisBuildStatusRequest)
+      returns (ReportIrisBuildStatusRequest) {}
+}

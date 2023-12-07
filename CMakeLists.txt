@@ -23,7 +23,8 @@ endif()
 
  # create a new library pointing to the api definition
 add_library(protodefs SHARED
-    ${CMAKE_CURRENT_SOURCE_DIR}/proto/planning/api.proto
+    ${CMAKE_CURRENT_SOURCE_DIR}/proto/planning/planner.proto
+    ${CMAKE_CURRENT_SOURCE_DIR}/proto/planning/builder.proto
     ${CMAKE_CURRENT_SOURCE_DIR}/proto/planning/types.proto
 )
 # link against protobuf and gRPC
