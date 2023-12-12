@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+import "proto/planning/types.proto";
+package proto;
+
+/** Request containing the information corresponding to a unique planning
+ * context; concretely, a geometric configuration, and a set of optional
+ * constraints. */
+message ComputeHashRequest {
+  string id = 1;
+  // the raw YAML representing the robot geometry should be dumped here
+  bytes robot_model_raw = 2;
+  Constraints constraints = 3;
+}
+/** Response which contains the resultant hash for the provided planning
+ * context. */
+message ComputeHashResponse {
+  string id = 1;
+  uint64 hash = 2;
+  // msg used to convey extra information to client; usually
+  // for explaining cause of error
+  string msg = 3;
+}
+
+service Hasher {
+  rpc HandleComputeHashRequest(ComputeHashRequest)
+      returns (ComputeHashResponse) {}
+}

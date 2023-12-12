@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+import "proto/planning/types.proto";
+package proto;
+
+/** Request containing all information necessary to uniquely define a planning
+ * problem in a format accepted by the planner. */
+message StartPlanRequest {
+  string id = 1;
+  ProblemDef def = 2;
+  string legacy_params = 3; // TODO(@davebambrick): deprecate
+}
+/** Response which contains the result of attempting to start computation of a
+ * solution for the corresponding StartPlanRequest. */
+message StartPlanResponse {
+  string id = 1;
+  bool success = 2;
+  // msg used to convey extra information to client; usually
+  // for explaining cause of error
+  string msg = 3;
+}
+
+/** Request to retrieve a plan with a unique ID, in the manner dictated by the
+ * given retrieval type. */
+message RetrievePlanRequest {
+  string id = 1;
+  RetrieveType retrieve_type = 2;
+  uint32 timeout_ms = 3;
+}
+
+/** Response which contains the result of retrieving the plan with the given ID.
+ */
+message RetrievePlanResponse {
+  string id = 1;
+  bool success = 2;
+  // msg used to convey extra information to client; usually
+  // for explaining cause of error
+  string msg = 3;
+  SysPoly spline = 4;
+}
+
+service MotionPlanner {
+  rpc HandleStartRequest(StartPlanRequest) returns (StartPlanResponse) {}
+  rpc HandleRetrieveRequest(RetrievePlanRequest)
+      returns (RetrievePlanResponse) {}
+}
