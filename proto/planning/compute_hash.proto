@@ -6,23 +6,26 @@ package proto;
 /** Request containing the information corresponding to a unique planning
  * context; concretely, a geometric configuration, and a set of optional
  * constraints. */
-message ComputeHashRequest {
-  string id = 1;
+message GetPlanContextIDRequest {
   // the raw YAML representing the robot geometry should be dumped here
-  bytes robot_model_raw = 2;
-  Constraints constraints = 3;
+  bytes robot_model_raw = 1;
+  Constraints constraints = 2;
 }
-/** Response which contains the resultant hash for the provided planning
+/** Response which contains the resultant unique ID for the provided planning
  * context. */
-message ComputeHashResponse {
-  string id = 1;
-  uint64 hash = 2;
+message GetPlanContextIDResponse {
+  uint64 id = 1;
   // msg used to convey extra information to client; usually
   // for explaining cause of error
-  string msg = 3;
+  string msg = 2;
 }
 
-service Hasher {
-  rpc HandleComputeHashRequest(ComputeHashRequest)
-      returns (ComputeHashResponse) {}
+/** Given a unique planning context, return the corresponding hash value which
+ * can be used to access the associated model/planner instance. The hash is
+ * dependent on the actual geometric values of the provided model, so changing
+ * the properties of one or more links in a model will result in different
+ * hashes. */
+service PlanContextIDGenerator {
+  rpc HandleGetPlanContextIDRequest(GetPlanContextIDRequest)
+      returns (GetPlanContextIDResponse) {}
 }
