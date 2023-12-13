@@ -7,17 +7,19 @@ package proto;
  * context; concretely, a geometric configuration, and a set of optional
  * constraints. */
 message GetPlanContextIDRequest {
+  string system_name = 1;
   // the raw YAML representing the robot geometry should be dumped here
-  bytes robot_model_raw = 1;
-  Constraints constraints = 2;
+  bytes model_directive_raw = 2;
+  Constraints constraints = 3;
 }
 /** Response which contains the resultant unique ID for the provided planning
  * context. */
 message GetPlanContextIDResponse {
-  uint64 id = 1;
+  bool success = 1;
+  uint64 context_id = 2;
   // msg used to convey extra information to client; usually
   // for explaining cause of error
-  string msg = 2;
+  string msg = 3;
 }
 
 /** Given a unique planning context, return the corresponding hash value which
