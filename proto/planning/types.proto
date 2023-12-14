@@ -113,5 +113,5 @@ enum RetrieveType {
 
 message Model {
   string name = 1;
-  bytes urdf_raw = 2;
+  string urdf_raw = 2;
 }
