@@ -19,12 +19,10 @@ message RegisterPlanContextRequest {
 message RegisterPlanContextResponse {
   bool success = 1;
   // unique hash
-  uint64 context_id = 2;
-  // true if the hash corresponds to a model owned by the manager
-  bool registered = 3;
+  PlanContextId context_id = 2;
   // msg used to convey extra information to client; usually
   // for explaining cause of error
-  string msg = 4;
+  string msg = 3;
 }
 
 /** Given a unique planning context, return the corresponding hash value which
