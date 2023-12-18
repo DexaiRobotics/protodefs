@@ -4,22 +4,32 @@ import "proto/planning/types.proto";
 package proto;
 
 /** Request containing all information necessary to start generating a set of
- * IRIS regions for a given planning context. */
-message StartIrisBuildRequest {
-  string id = 1;
-  // contains information about the system geometry
-  Parameters parameters = 2;
-  // contains constraint information
-  Constraints constraints = 3;
+ * IRIS regions for a given planning context from a set of seed configurations.
+ */
+message StartBuildFromConfsRequest {
+  string request_id = 1;
+  // Unique ID for a given plan context
+  PlanContextId context_id = 2;
   // set of configurations; we will use these to construct planning problems
   // synthetically
-  repeated SystemConf configurations = 4;
+  repeated SystemConf seed_configs = 3;
+}
+
+/** Request containing all information necessary to start generating a set of
+ * IRIS regions for a given planning context. */
+message StartBuildFromEdgesRequest {
+  string request_id = 1;
+  // Unique ID for a given plan context
+  PlanContextId context_id = 2;
+  // set of configurations; we will use these to construct planning problems
+  // synthetically
+  repeated SystemConfEdge seed_edges = 3;
 }
 
 /** Response which contains the result of attempting to start computation of a
- * solution for the corresponding StartIrisBuildRequest. */
-message StartIrisBuildResponse {
-  string id = 1;
+ * solution for the corresponding StartBuildFromConfsRequest. */
+message StartBuildResponse {
+  string request_id = 1;
   bool success = 2;
   // msg used to convey extra information to client; usually
   // for explaining cause of error
@@ -28,21 +38,27 @@ message StartIrisBuildResponse {
 
 /** Request to retrieve the status of a given IRIS region generation job with a
  * unique ID. */
-message ReportIrisBuildStatusRequest { string id = 1; }
+message ReportBuildStatusRequest {
+  string request_id = 1;
+}
 
 /** Response which contains the result of retrieving the status of the job with
  * the given ID. */
-message ReportIrisBuildStatusResponse {
-  string id = 1;
-
+message ReportBuildStatusResponse {
+  string request_id = 1;
   bool complete = 2;
-
   string msg = 3;
 }
 
 service IrisBuilder {
-  rpc HandleStartRequest(StartIrisBuildRequest)
-      returns (StartIrisBuildResponse) {}
-  rpc HandleReportStatusRequest(ReportIrisBuildStatusRequest)
-      returns (ReportIrisBuildStatusRequest) {}
+  /** Start a build job from a set of seed confiugrations. */
+  rpc HandleStartBuildFromConfsRequest(StartBuildFromConfsRequest)
+      returns (StartBuildResponse) {}
+  /** Start a build job from a set of seed confiugration edges. */
+  rpc HandleStartBuildFromEdgesRequest(StartBuildFromEdgesRequest)
+      returns (StartBuildResponse) {}
+  /** Return a reoprt on the status of a build job with the given original
+   * request ID. */
+  rpc HandleReportStatusRequest(ReportBuildStatusRequest)
+      returns (ReportBuildStatusRequest) {}
 }

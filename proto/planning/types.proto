@@ -3,15 +3,27 @@ syntax = "proto3";
 package proto;
 
 /** Joint configuration for a single robot. */
-message Conf { repeated double data = 1; }
+message Conf {
+  repeated double data = 1;
+}
 
 /** "System configuration", a type mapping individual robots to respective
  * independent configurations. To be a valid configuration, all robots must be
  * specified. */
-message SystemConf { map<string, Conf> data = 1; }
+message SystemConf {
+  map<string, Conf> data = 1;
+}
 
+/** Pair of system configurations representing an edge in the configuration
+ * space. */
+message SystemConfEdge {
+  SystemConf v1 = 1;
+  SystemConf v2 = 2;
+}
 /** A vector of coefficients for a single monomial. */
-message Coeffs { repeated double data = 1; }
+message Coeffs {
+  repeated double data = 1;
+}
 
 /* Individual piecewise polynomial trajectory, uniquely defined by
  *   1) an array of "breaks", or points in time representing
@@ -33,7 +45,9 @@ message Poly {
 
 /** System polynomial; a map of individual polynomials to their respective
  * target robots. */
-message SysPoly { map<string, Poly> data = 1; }
+message SysPoly {
+  map<string, Poly> data = 1;
+}
 
 /** Constrains the position of a point Q, rigidly attached to a frame B, to be
  * within a bounding box measured and expressed in frame A.
@@ -101,4 +115,18 @@ enum RetrieveType {
   BLOCKING = 1;
   IF_READY = 2;
   WITH_TIMEOUT = 3;
+}
+
+/** Message containing the name of the model, which will be used to set its
+ * filename, and the raw contents of its geometric representation. Currently
+ * only UDRF formats are supported.*/
+message Model {
+  string name = 1;
+  string urdf_raw = 2;
+}
+
+/** Message containing the unique hash computed from a given unique plan
+ * context. */
+message PlanContextId {
+  uint64 value = 1;
 }
