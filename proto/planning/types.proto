@@ -123,6 +123,4 @@ message Model {
  * context. */
 message PlanContextId {
   uint64 value = 1;
-  // true if the hash corresponds to a model owned by the manager
-  bool registered = 2;
 }
