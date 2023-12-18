@@ -16,7 +16,8 @@ message StartBuildFromConfsRequest {
 }
 
 /** Request containing all information necessary to start generating a set of
- * IRIS regions for a given planning context. */
+ * IRIS regions for a given planning context from a set of edges which satisfy
+ * the given context. */
 message StartBuildFromEdgesRequest {
   string request_id = 1;
   // Unique ID for a given plan context

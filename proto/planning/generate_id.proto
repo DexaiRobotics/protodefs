@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+import "proto/planning/types.proto";
+package proto;
+
+/** Request containing the information corresponding to a unique planning
+ * context; concretely, a geometric configuration, and a set of optional
+ * constraints. */
+message RegisterPlanContextRequest {
+  string package_name = 1;
+  // the raw YAML representing the robot geometry should be dumped here
+  string model_directive_yaml = 2;
+  // set of all models referenced by the model directive
+  repeated Model models = 3;
+  Constraints constraints = 4;
+}
+/** Response which contains the resultant unique ID for the provided planning
+ * context. */
+message RegisterPlanContextResponse {
+  bool success = 1;
+  // unique hash
+  PlanContextId context_id = 2;
+  // msg used to convey extra information to client; usually
+  // for explaining cause of error
+  string msg = 3;
+}
+
+/** Given a unique planning context, return the corresponding hash value which
+ * can be used to access the associated model/planner instance. The hash is
+ * dependent on the actual geometric values of the provided model, so changing
+ * the properties of one or more links in a model will result in different
+ * hashes. */
+service PlanContextRegistry {
+  rpc HandleRegisterPlanContextRequest(RegisterPlanContextRequest)
+      returns (RegisterPlanContextResponse) {}
+}
