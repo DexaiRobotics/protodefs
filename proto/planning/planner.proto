@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "proto/planning/types.proto";
 package proto;
+option go_package = "protobuf/planning";
 
 /** Request containing all information necessary to uniquely define a planning
  * problem in a format accepted by the planner. */

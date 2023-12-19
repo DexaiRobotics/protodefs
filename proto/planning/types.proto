@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 package proto;
+option go_package = "protobuf/planning";
 
 /** Joint configuration for a single robot. */
 message Conf {
@@ -14,6 +15,12 @@ message SystemConf {
   map<string, Conf> data = 1;
 }
 
+/** Pair of system configurations representing an edge in the configuration
+ * space. */
+message SystemConfEdge {
+  SystemConf v1 = 1;
+  SystemConf v2 = 2;
+}
 /** A vector of coefficients for a single monomial. */
 message Coeffs {
   repeated double data = 1;

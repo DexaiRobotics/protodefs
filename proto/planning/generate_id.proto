@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "proto/planning/types.proto";
 package proto;
+option go_package = "protobuf/planning";
 
 /** Request containing the information corresponding to a unique planning
  * context; concretely, a geometric configuration, and a set of optional
