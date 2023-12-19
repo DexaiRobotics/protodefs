@@ -22,7 +22,11 @@ if (NOT GRPC_CPP_PLUGIN)
 endif()
 
  # create a new library pointing to the api definition
- add_library(protodefs SHARED ${CMAKE_CURRENT_SOURCE_DIR}/proto/planning/api.proto)
+ add_library(protodefs SHARED
+   ${CMAKE_CURRENT_SOURCE_DIR}/proto/planning/types.proto
+   ${CMAKE_CURRENT_SOURCE_DIR}/proto/planning/planner.proto
+   ${CMAKE_CURRENT_SOURCE_DIR}/proto/planning/generate_id.proto
+)
  # link against protobuf and gRPC
  target_link_libraries(protodefs
      PUBLIC

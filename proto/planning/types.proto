@@ -1,0 +1,126 @@
+syntax = "proto3";
+
+package proto;
+
+/** Joint configuration for a single robot. */
+message Conf {
+  repeated double data = 1;
+}
+
+/** "System configuration", a type mapping individual robots to respective
+ * independent configurations. To be a valid configuration, all robots must be
+ * specified. */
+message SystemConf {
+  map<string, Conf> data = 1;
+}
+
+/** A vector of coefficients for a single monomial. */
+message Coeffs {
+  repeated double data = 1;
+}
+
+/* Individual piecewise polynomial trajectory, uniquely defined by
+ *   1) an array of "breaks", or points in time representing
+ *      the intervals for constituent polynomials.
+ *   2) an array of m-by-n matrices of coeffecient vectors, where
+ *      a single constituent matrix uniquely defines a given
+ *      polynomial. each matrix contains the coefficients of the
+ *      underlying additive monomials.
+ * note: the coeffecients are stored in this message type
+ * as a vector of vectors, so care must be taken to properly
+ */
+message Poly {
+  repeated double breaks = 1;
+  uint32 rows = 2;
+  uint32 cols = 3;
+  // vector of monomial coefficients
+  repeated Coeffs coeffs = 4;
+}
+
+/** System polynomial; a map of individual polynomials to their respective
+ * target robots. */
+message SysPoly {
+  map<string, Poly> data = 1;
+}
+
+/** Constrains the position of a point Q, rigidly attached to a frame B, to be
+ * within a bounding box measured and expressed in frame A.
+ * Reference:
+ * https://drake.mit.edu/doxygen_cxx/classdrake_1_1multibody_1_1_position_constraint.html
+ */
+message PositionConstraint {
+  string frame_A = 1;
+  string frame_B = 2;
+  repeated double p_AQ_lower = 3;
+  repeated double p_AQ_upper = 4;
+  repeated double p_BQ = 5;
+}
+/** Constrains the angle between a vector a and another vector b to be within
+ * the open interval [θ_lower, θ_upper]. Reference:
+ * https://drake.mit.edu/doxygen_cxx/classdrake_1_1multibody_1_1_angle_between_vectors_constraint.html
+ */
+message AngleBetweenVectorsConstraint {
+  string frame_A = 1;
+  string frame_B = 2;
+  repeated double a_A = 3;
+  repeated double b_B = 4;
+  double angle_lower = 5;
+  double angle_upper = 6;
+}
+/** The set of all constraints for the given planning problem. */
+message Constraints {
+  repeated PositionConstraint pos_constraints = 1;
+  repeated AngleBetweenVectorsConstraint angle_constraints = 2;
+  // TODO(@davebambrick): Add collision filtering
+}
+
+/** All information which uniquely defines a given planning problem. */
+message ProblemDef {
+  string name = 1;
+  SystemConf goal = 2;
+  SystemConf start = 3;
+  Parameters params = 4;
+  Constraints constraints = 5;
+  // TODO(@davebambrick): deprecate ASAP
+  double orientation_tol = 6;
+  bool use_columnar_constraint = 7;
+  bool use_height_constraint = 8;
+}
+
+/** Parameters which provide supplemental information to the planner (f.e., what
+ * kind of system is requesting a plan). */
+message Parameters {
+  string system_name = 1;
+  string model_directive = 2;
+  string robot_name = 3;
+}
+
+/** Enum which controls plan retrieval behavior for a given RetrievePlanRequest.
+ * Retrieval behavior is as follows:
+ *   - UNSPECIFIED. Default value
+ *   - BLOCKING. Wait indefinitely for the computation of the plan to complete.
+ *   - IF_READY. Only return if computation is completed at the time of reciept
+ *     of the request. Equivalent to a timeout of length zero.
+ *   - WITH_TIMEOUT. Wait for a maximum interval of timeout_ms for computation
+ *     to complete before returning failure.
+ */
+enum RetrieveType {
+  UNSPECIFIED = 0;
+  BLOCKING = 1;
+  IF_READY = 2;
+  WITH_TIMEOUT = 3;
+}
+
+/** Message containing the name of the model, which will be used to set its
+ * filename, and the raw contents of its geometric representation. Currently
+ * only UDRF formats are supported.*/
+message Model {
+  string name = 1;
+  string urdf_raw = 2;
+}
+
+/** Message containing the unique hash computed from a given unique plan
+ * context. */
+message PlanContextId {
+  uint64 value = 1;
+}
