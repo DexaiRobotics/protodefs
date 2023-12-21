@@ -61,5 +61,5 @@ service IrisBuilder {
   /** Return a reoprt on the status of a build job with the given original
    * request ID. */
   rpc HandleReportStatusRequest(ReportBuildStatusRequest)
-      returns (ReportBuildStatusRequest) {}
+      returns (ReportBuildStatusResponse) {}
 }
