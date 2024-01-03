@@ -14,6 +14,12 @@ message SystemConf {
   map<string, Conf> data = 1;
 }
 
+/** Pair of system configurations representing an edge in the configuration
+ * space. */
+message SystemConfEdge {
+  SystemConf v1 = 1;
+  SystemConf v2 = 2;
+}
 /** A vector of coefficients for a single monomial. */
 message Coeffs {
   repeated double data = 1;
@@ -124,4 +130,5 @@ message Model {
  * context. */
 message PlanContextId {
   uint64 value = 1;
+  string system_name = 2;
 }
