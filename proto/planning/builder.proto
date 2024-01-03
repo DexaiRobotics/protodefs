@@ -22,8 +22,8 @@ message StartBuildFromEdgesRequest {
   string request_id = 1;
   // Unique ID for a given plan context
   PlanContextId context_id = 2;
-  // set of configurations; we will use these to construct planning problems
-  // synthetically
+  // set of edges, used to populate IRIS regions by sampling points along each
+  // valid edge
   repeated SystemConfEdge seed_edges = 3;
 }
 
