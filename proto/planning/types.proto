@@ -85,7 +85,6 @@ message ProblemDef {
   double orientation_tol = 6;
   bool use_columnar_constraint = 7;
   bool use_height_constraint = 8;
-
   PlanContextId context_id = 9;
 }
 
