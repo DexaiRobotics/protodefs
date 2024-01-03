@@ -10,8 +10,9 @@ message StartBuildFromConfsRequest {
   string request_id = 1;
   // Unique ID for a given plan context
   PlanContextId context_id = 2;
-  // set of configurations; we will use these to construct planning problems
-  // synthetically
+  // set of configurations; this data can be used to populate IRIS regions
+  // either directly, or by first computing edges between each valid pair
+  // in the set and then sampling from those edges
   repeated SystemConf seed_configs = 3;
 }
 
