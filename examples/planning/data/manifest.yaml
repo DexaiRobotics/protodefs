@@ -1,1 +1,3 @@
-# Intentionally empty manifest file for testing the server.
+- dmd: iiwa_boxes
+  constraints:
+    - default
