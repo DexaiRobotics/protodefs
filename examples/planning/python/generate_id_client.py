@@ -38,7 +38,7 @@ from build.builder_pb2_grpc import IrisBuilderStub
 
 def make_constraints(constraints_name):
     with open(os.path.join(DATA_DIR, "constraints", f"{constraints_name}.yaml")) as f:
-        data = yaml.load(f)
+        data = yaml.safe_load(f)
     pos_constraints = []
     angle_constraints = []
     if "pos_constraints" in data:
@@ -100,7 +100,7 @@ def make_id_request(system_name, package_name, dmd_name, constraints_name):
 def make_build_request(context_id, configs_fname):
     seed_configs = []
     with open(os.path.join(DATA_DIR, configs_fname)) as f:
-        data = yaml.load(f)
+        data = yaml.safe_load(f)
         for _, sysconf in data.items():
             sysconf_data = {}
             for robot, conf_data in sysconf.items():
