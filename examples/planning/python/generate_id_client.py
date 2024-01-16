@@ -23,18 +23,6 @@ from build.generate_id_pb2_grpc import PlanContextRegistryStub
 from build.builder_pb2 import StartBuildFromConfsRequest
 from build.builder_pb2_grpc import IrisBuilderStub
 
-# position_constraints:
-#   - frame_A: hotel_pan_sixth_6in_024
-#     frame_B: disher_2oz_face
-#     position_BQ: [0.0, 0.0, 0.0]
-#     position_AQ_lower: [-0.15, -0.08, -0.02]
-#     position_AQ_upper: [0.15, 0.08, 0.66]
-#   - frame_A: hotel_pan_sixth_6in_024
-#     frame_B: disher_2oz_tip
-#     position_BQ: [0.0, 0.0, 0.0]
-#     position_AQ_lower: [-0.15, -0.08, -0.02]
-#     position_AQ_upper: [0.15, 0.08, 0.66]
-
 
 def make_constraints(constraints_name):
     with open(os.path.join(DATA_DIR, "constraints", f"{constraints_name}.yaml")) as f:
@@ -112,15 +100,15 @@ def make_build_request(context_id, configs_fname):
 
 
 def run():
-    req = make_id_request("iiwa-test", "iiwa_models", "iiwa_boxes", "default")
+    req = make_id_request("iiwa", "iiwa_models", "iiwa_boxes", "default")
     with grpc.insecure_channel("0.0.0.0:5151") as channel:
         stub = PlanContextRegistryStub(channel)
         resp = stub.HandleRegisterPlanContextRequest(req)
     print(f"Got ID: {resp.context_id.value}")
-    with grpc.insecure_channel("0.0.0.0:5150") as channel:
-        stub = IrisBuilderStub(channel)
-        req = make_build_request(resp.context_id, "key_configs.yaml")
-        resp = stub.HandleStartBuildFromConfsRequest(req)
+    # with grpc.insecure_channel("0.0.0.0:5150") as channel:
+    #     stub = IrisBuilderStub(channel)
+    #     req = make_build_request(resp.context_id, "key_configs.yaml")
+    #     resp = stub.HandleStartBuildFromConfsRequest(req)
 
 
 if __name__ == "__main__":
