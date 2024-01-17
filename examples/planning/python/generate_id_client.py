@@ -105,10 +105,11 @@ def run():
         stub = PlanContextRegistryStub(channel)
         resp = stub.HandleRegisterPlanContextRequest(req)
     print(f"Got ID: {resp.context_id.value}")
-    # with grpc.insecure_channel("0.0.0.0:5150") as channel:
-    #     stub = IrisBuilderStub(channel)
-    #     req = make_build_request(resp.context_id, "key_configs.yaml")
-    #     resp = stub.HandleStartBuildFromConfsRequest(req)
+    with grpc.insecure_channel("0.0.0.0:5150") as channel:
+        stub = IrisBuilderStub(channel)
+        req = make_build_request(resp.context_id, "key_configs.yaml")
+        resp = stub.HandleStartBuildFromConfsRequest(req)
+    print("Started IRIS job")
 
 
 if __name__ == "__main__":
