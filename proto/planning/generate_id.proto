@@ -1,6 +1,7 @@
 syntax = "proto3";
 
-import "proto/planning/types.proto";
+option go_package = "github.com/DexaiRobotics/protodefs/proto/planning";
+import "types.proto";
 package proto;
 
 /** Request containing the information corresponding to a unique planning

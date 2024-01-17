@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+option go_package = "github.com/DexaiRobotics/protodefs/proto/planning";
 package proto;
 
 /** Joint configuration for a single robot. */
