@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+option go_package = "github.com/DexaiRobotics/protodefs/proto/planning";
 import "types.proto";
 package proto;
 
@@ -8,7 +9,7 @@ package proto;
 message StartPlanRequest {
   string id = 1;
   ProblemDef def = 2;
-  string legacy_params = 3; // TODO(@davebambrick): deprecate
+  string legacy_params = 3;  // TODO(@davebambrick): deprecate
 }
 /** Response which contains the result of attempting to start computation of a
  * solution for the corresponding StartPlanRequest. */
