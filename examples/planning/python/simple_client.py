@@ -3,7 +3,7 @@ import sys
 import yaml
 import os
 import os.path
-from typing import List
+from typing import Tuple
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(os.path.dirname(ROOT_DIR), "data")
@@ -32,9 +32,9 @@ from build.builder_pb2_grpc import IrisBuilderStub
 def make_position_constraint_msg(
     frame_A: str,
     frame_B: str,
-    p_AQ_lower: List[float],
-    p_AQ_upper: List[float],
-    position_BQ: List[float],
+    p_AQ_lower: Tuple[float, float, float],
+    p_AQ_upper: Tuple[float, float, float],
+    position_BQ: Tuple[float, float, float],
 ) -> PositionConstraint:
     """Make a Protobuf message for a position constraint on a point Q atached
     to a frame B, measured and expressed in frame A.
@@ -42,11 +42,11 @@ def make_position_constraint_msg(
     Args:
         frame_A (str): The frame in which point Q's position is measured
         frame_B (str): The frame to which point Q is rigidly attached.
-        p_AQ_lower (List[float]): The lower bound on the position of point Q,
+        p_AQ_lower (Tuple[float, float, float]): The lower bound on the position of point Q,
         measured and expressed in frame A.
-        p_AQ_upper (List[float]): The upper bound on the position of point Q,
+        p_AQ_upper (Tuple[float, float, float]): The upper bound on the position of point Q,
         measured and expressed in frame A.
-        position_BQ (List[float]): The position of the point Q, rigidly
+        position_BQ (Tuple[float, float, float]): The position of the point Q, rigidly
         attached to frame B, measured and expressed in frame B.
 
     Returns:
@@ -64,8 +64,8 @@ def make_position_constraint_msg(
 def make_angular_constraint_msg(
     frame_A: str,
     frame_B: str,
-    a_A: List[float],
-    b_B: List[float],
+    a_A: Tuple[float, float, float],
+    b_B: Tuple[float, float, float],
     angle_lower: float,
     angle_upper: float,
 ) -> AngleBetweenVectorsConstraint:
@@ -76,9 +76,9 @@ def make_angular_constraint_msg(
     Args:
         frame_A (str): The frame in which point Q's position is measured
         frame_B (str): The frame to which point Q is rigidly attached.
-        a_A (List[float]): The vector a fixed to frame A, expressed in
+        a_A (Tuple[float, float, float]): The vector a fixed to frame A, expressed in
         frame A.
-        b_B (List[float]): The vector b fixed to frame B, expressed in
+        b_B (Tuple[float, float, float]): The vector b fixed to frame B, expressed in
         frame B.
         angle_lower (float): The lower bound on the angle between a and b.
         angle_upper (float): The upper bound on the angle between a and b.
@@ -197,7 +197,7 @@ def make_id_request(
     )
 
 
-def make_build_request(
+def make_iris_build_request(
     req_id: str, context_id: PlanContextId, seed_configs_file: str
 ) -> StartBuildFromConfsRequest:
     """Make a Protobuf request message to generate a set of IRIS regions for a
@@ -230,7 +230,7 @@ def get_plan_context_id(req: RegisterPlanContextRequest) -> RegisterPlanContextR
         return stub.HandleRegisterPlanContextRequest(req)
 
 
-def start_iris_job(req: StartBuildFromConfsRequest) -> StartBuildResponse:
+def start_iris_build_job(req: StartBuildFromConfsRequest) -> StartBuildResponse:
     """Send a populated request to the IRIS generation service."""
     with grpc.insecure_channel("0.0.0.0:5150") as channel:
         stub = IrisBuilderStub(channel)
@@ -254,12 +254,12 @@ def run() -> None:
     print(f"Got ID: {id_resp.context_id.value}")
     seed_configs_file = os.path.join(DATA_DIR, "key_configs.yaml")
     # construct and send the IRIS build request
-    build_req = make_build_request(
+    build_req = make_iris_build_request(
         req_id="TEST_ID",
         context_id=id_resp.context_id,
         seed_configs_file=seed_configs_file,
     )
-    build_resp = start_iris_job(build_req)
+    build_resp = start_iris_build_job(build_req)
     if build_resp.success:
         print("Started IRIS job successfully")
     else:
