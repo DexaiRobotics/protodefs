@@ -272,7 +272,6 @@ def make_build_from_confs_request(
 def make_build_from_edges_request(
     req_id: str,
     context_id: PlanContextId,
-    seed_data_file: str,
 ) -> StartBuildFromEdgesRequest:
     """Make a Protobuf request message to generate a set of IRIS regions for a
     unique planning context and set of seed data.
@@ -299,8 +298,6 @@ def make_build_from_edges_request(
 
 def get_plan_context_id(req: RegisterPlanContextRequest) -> RegisterPlanContextResponse:
     """Send a populated request to the plan context registry service."""
-    with grpc.insecure_channel("0.0.0.0:5151") as channel:
-        stub = PlanContextRegistryStub(channel)
         return stub.HandleRegisterPlanContextRequest(req)
 
 
