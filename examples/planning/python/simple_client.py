@@ -3,7 +3,7 @@ import sys
 import yaml
 import os
 import os.path
-from typing import Tuple
+from typing import List, Tuple
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(os.path.dirname(ROOT_DIR), "data")
