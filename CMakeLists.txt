@@ -40,12 +40,14 @@ target_include_directories(protodefs PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 protobuf_generate(
     TARGET protodefs
     LANGUAGE cpp
+    APPEND_PATH
     OUT_VAR PROTO_FILES
 )
 # 2.) generate gRPC files using serializations from the previous step
 protobuf_generate(
     TARGET protodefs
     LANGUAGE grpc
+    APPEND_PATH
     OUT_VAR PROTO_FILES
     GENERATE_EXTENSIONS .grpc.pb.h .grpc.pb.cc
     PLUGIN "protoc-gen-grpc=${GRPC_CPP_PLUGIN}"
@@ -54,4 +56,3 @@ protobuf_generate(
 set_source_files_properties(${PROTO_FILES} PROPERTIES GENERATED TRUE)
 # add to include directories
 target_include_directories(protodefs PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-
