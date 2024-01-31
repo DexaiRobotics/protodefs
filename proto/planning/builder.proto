@@ -1,13 +1,13 @@
 syntax = "proto3";
 
-import "proto/planning/types.proto";
+import "types.proto";
 package proto;
 
 /** Request containing all information necessary to start generating a set of
  * IRIS regions for a given planning context from a set of seed configurations.
  */
 message StartBuildFromConfsRequest {
-  string request_id = 1;
+  string id = 1;
   // Unique ID for a given plan context
   PlanContextId context_id = 2;
   // set of configurations; this data can be used to populate IRIS regions
@@ -20,7 +20,7 @@ message StartBuildFromConfsRequest {
  * IRIS regions for a given planning context from a set of edges which satisfy
  * the given context. */
 message StartBuildFromEdgesRequest {
-  string request_id = 1;
+  string id = 1;
   // Unique ID for a given plan context
   PlanContextId context_id = 2;
   // set of edges, used to populate IRIS regions by sampling points along each
@@ -31,7 +31,7 @@ message StartBuildFromEdgesRequest {
 /** Response which contains the result of attempting to start computation of a
  * solution for the corresponding StartBuildFromConfsRequest. */
 message StartBuildResponse {
-  string request_id = 1;
+  string id = 1;
   bool success = 2;
   // msg used to convey extra information to client; usually
   // for explaining cause of error
@@ -41,13 +41,13 @@ message StartBuildResponse {
 /** Request to retrieve the status of a given IRIS region generation job with a
  * unique ID. */
 message ReportBuildStatusRequest {
-  string request_id = 1;
+  string id = 1;
 }
 
 /** Response which contains the result of retrieving the status of the job with
  * the given ID. */
 message ReportBuildStatusResponse {
-  string request_id = 1;
+  string id = 1;
   bool complete = 2;
   string msg = 3;
 }

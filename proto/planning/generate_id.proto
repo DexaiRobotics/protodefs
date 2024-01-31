@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-import "proto/planning/types.proto";
+import "types.proto";
 package proto;
 
 /** Request containing the information corresponding to a unique planning
