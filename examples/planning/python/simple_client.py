@@ -2,8 +2,9 @@ import grpc
 import sys
 import yaml
 import os
+import click
 import os.path
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(os.path.dirname(ROOT_DIR), "data")
@@ -15,6 +16,7 @@ from build.types_pb2 import (
     Constraints,
     Model,
     SystemConf,
+    SystemConfEdge,
     Conf,
     PositionConstraint,
     AngleBetweenVectorsConstraint,
@@ -25,8 +27,36 @@ from build.generate_id_pb2 import (
     RegisterPlanContextResponse,
 )
 from build.generate_id_pb2_grpc import PlanContextRegistryStub
-from build.builder_pb2 import StartBuildFromConfsRequest, StartBuildResponse
+from build.builder_pb2 import (
+    StartBuildFromConfsRequest,
+    StartBuildFromEdgesRequest,
+    StartBuildResponse,
+)
 from build.builder_pb2_grpc import IrisBuilderStub
+
+
+# YAML overhead for DMDs
+class RotationTag(yaml.YAMLObject):
+    yaml_tag = "!Rpy"
+
+    def __init__(self, rot):
+        self.rot = rot
+
+    def __repr__(self):
+        v = os.environ.get(self.rot) or ""
+        return "RPY"
+
+    @classmethod
+    def from_yaml(cls, loader, node):
+        return "RPY"
+
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        return dumper.represent_scalar(cls.yaml_tag, data.rot)
+
+
+# Required for safe_load
+yaml.SafeLoader.add_constructor("!Rpy", RotationTag.from_yaml)
 
 
 def make_position_constraint_msg(
@@ -34,7 +64,7 @@ def make_position_constraint_msg(
     frame_B: str,
     p_AQ_lower: Tuple[float, float, float],
     p_AQ_upper: Tuple[float, float, float],
-    position_BQ: Tuple[float, float, float],
+    p_BQ: Tuple[float, float, float],
 ) -> PositionConstraint:
     """Make a Protobuf message for a position constraint on a point Q atached
     to a frame B, measured and expressed in frame A.
@@ -46,7 +76,7 @@ def make_position_constraint_msg(
         measured and expressed in frame A.
         p_AQ_upper (Tuple[float, float, float]): The upper bound on the position of point Q,
         measured and expressed in frame A.
-        position_BQ (Tuple[float, float, float]): The position of the point Q, rigidly
+        p_BQ (Tuple[float, float, float]): The position of the point Q, rigidly
         attached to frame B, measured and expressed in frame B.
 
     Returns:
@@ -57,7 +87,7 @@ def make_position_constraint_msg(
         frame_B=frame_B,
         p_AQ_lower=p_AQ_lower,
         p_AQ_upper=p_AQ_upper,
-        position_BQ=position_BQ,
+        p_BQ=p_BQ,
     )
 
 
@@ -110,15 +140,15 @@ def make_constraints_msg_from_yaml(constraints_fname: str) -> Constraints:
         data = yaml.safe_load(f)
     pos_constraints = []
     angle_constraints = []
-    if "pos_constraints" in data:
-        for constraint in data["pos_constraints"]:
+    if "position_constraints" in data:
+        for constraint in data["position_constraints"]:
             pos_constraints.append(
                 make_position_constraint_msg(
                     frame_A=constraint["frame_A"],
                     frame_B=constraint["frame_B"],
                     p_AQ_lower=constraint["position_AQ_lower"],
                     p_AQ_upper=constraint["position_AQ_upper"],
-                    position_BQ=constraint["position_BQ"],
+                    p_BQ=constraint["position_BQ"],
                 )
             )
     if "angle_constraints" in data:
@@ -145,7 +175,7 @@ def raw_file_contents(fname: str) -> str:
     return data
 
 
-def make_models(urdf_dir: str) -> List[Model]:
+def make_models(dmd_file: str, urdf_dir: str) -> List[Model]:
     """Make a vector of Protobuf messages of robot models for all URDFs
     located at the target directory.
 
@@ -156,12 +186,19 @@ def make_models(urdf_dir: str) -> List[Model]:
         Vector[types_pb2.Model]
     """
     models = []
-    for fname in os.listdir(urdf_dir):
-        if fname.endswith(".urdf"):
+    with open(dmd_file) as f:
+        dmd_yaml = yaml.safe_load(f)
+    for d in dmd_yaml["directives"]:
+        if "add_model" in d:
+            urdf_full = d["add_model"]["file"]
+            urdf_fname = urdf_full.split("/")[-1]
+            urdf_path = os.path.join(urdf_dir, urdf_fname)
+            if not os.path.isfile(urdf_path):
+                raise FileNotFoundError(f"The URDF {urdf_path} could not be found!")
             models.append(
                 Model(
-                    name=os.path.splitext(fname)[0],
-                    urdf_raw=raw_file_contents(os.path.join(urdf_dir, fname)),
+                    name=urdf_fname[: urdf_fname.find(".urdf")],
+                    urdf_raw=raw_file_contents(urdf_path),
                 )
             )
     return models
@@ -192,34 +229,70 @@ def make_id_request(
         system_name=system_name,
         package_name=package_name,
         model_directive_yaml=raw_file_contents(dmd_file),
-        models=make_models(urdf_dir),
+        models=make_models(dmd_file, urdf_dir),
         constraints=make_constraints_msg_from_yaml(constraints_file),
     )
 
 
-def make_iris_build_request(
-    req_id: str, context_id: PlanContextId, seed_configs_file: str
+def make_sysconf_msg(sysconf_yaml):
+    sysconf_data = {}
+    for robot, conf_list in sysconf_yaml.items():
+        conf_data = [c for c in conf_list]
+        sysconf_data[robot] = Conf(data=conf_data)
+    sysconf = SystemConf(data=sysconf_data)
+    return sysconf
+
+
+def make_build_from_confs_request(
+    req_id: str,
+    context_id: PlanContextId,
+    seed_data_file: str,
 ) -> StartBuildFromConfsRequest:
     """Make a Protobuf request message to generate a set of IRIS regions for a
     unique planning context and set of seed data.
 
     Args:
         context_id (types_pb2.PlanContextId): unique ID for the target context
-        seed_configs_file (str): file containing seed configuration data
+        seed_data_file (str): file containing seed configuration data
 
     Returns:
         builder_pb2.StartBuildFromConfsRequest
     """
     seed_configs = []
-    with open(seed_configs_file) as f:
+    with open(seed_data_file) as f:
         data = yaml.safe_load(f)
         for _, sysconf in data.items():
-            sysconf_data = {}
-            for robot, conf_data in sysconf.items():
-                sysconf_data[robot] = Conf(data=conf_data)
-            seed_configs.append(SystemConf(data=sysconf_data))
+            seed_configs.append(make_sysconf_msg(sysconf))
     return StartBuildFromConfsRequest(
         id=req_id, context_id=context_id, seed_configs=seed_configs
+    )
+
+
+def make_build_from_edges_request(
+    req_id: str,
+    context_id: PlanContextId,
+    seed_data_file: str,
+) -> StartBuildFromEdgesRequest:
+    """Make a Protobuf request message to generate a set of IRIS regions for a
+    unique planning context and set of seed data.
+
+    Args:
+        context_id (types_pb2.PlanContextId): unique ID for the target context
+        seed_data_file (str): file containing seed configuration data
+
+    Returns:
+        builder_pb2.StartBuildFromConfsRequest
+    """
+    seed_edges = []
+    with open(seed_data_file) as f:
+        data = yaml.safe_load(f)
+        for edge in data["edges"]:
+            v1 = make_sysconf_msg(edge["u"])
+            v2 = make_sysconf_msg(edge["v"])
+            edge_msg = SystemConfEdge(v1=v1, v2=v2)
+            seed_edges.append(edge_msg)
+    return StartBuildFromEdgesRequest(
+        id=req_id, context_id=context_id, seed_edges=seed_edges
     )
 
 
@@ -230,36 +303,100 @@ def get_plan_context_id(req: RegisterPlanContextRequest) -> RegisterPlanContextR
         return stub.HandleRegisterPlanContextRequest(req)
 
 
-def start_iris_build_job(req: StartBuildFromConfsRequest) -> StartBuildResponse:
+def start_iris_build_from_edges(
+    req: StartBuildFromEdgesRequest,
+) -> StartBuildResponse:
+    """Send a populated request to the IRIS generation service."""
+    with grpc.insecure_channel("0.0.0.0:5150") as channel:
+        stub = IrisBuilderStub(channel)
+        return stub.HandleStartBuildFromEdgesRequest(req)
+
+
+def start_iris_build_from_confs(
+    req: StartBuildFromConfsRequest,
+) -> StartBuildResponse:
     """Send a populated request to the IRIS generation service."""
     with grpc.insecure_channel("0.0.0.0:5150") as channel:
         stub = IrisBuilderStub(channel)
         return stub.HandleStartBuildFromConfsRequest(req)
 
 
-def run() -> None:
-    # paths to geometry and constraints data
-    dmd_file = os.path.join(DATA_DIR, "dmd", "iiwa_boxes.dmd.yaml")
-    urdf_dir = os.path.join(DATA_DIR, "urdf")
-    constraints_file = os.path.join(DATA_DIR, "constraints", "default.yaml")
+@click.group(invoke_without_command=True)
+@click.option(
+    "-s",
+    "--system_name",
+    default="kuka-iiwa",
+    type=str,
+    help="""Top-level namespace under which all underlying data is stored""",
+)
+@click.option(
+    "-p",
+    "--package_name",
+    default="iiwa_models",
+    type=str,
+    help="""Top-level namespace under which all underlying data is stored""",
+)
+@click.option(
+    "-d",
+    "--dmd",
+    default=os.path.join(DATA_DIR, "dmd", "iiwa_boxes.dmd.yaml"),
+    type=str,
+    help="Path to target DMD file",
+)
+@click.option(
+    "-c",
+    "--constraints",
+    default=os.path.join(DATA_DIR, "constraints", "default.yaml"),
+    type=str,
+    help="Path to target constraints file",
+)
+@click.option(
+    "-u",
+    "--urdf_dir",
+    default=os.path.join(DATA_DIR, "urdf"),
+    type=str,
+    help="Path to directory in which the URDFs used by the DMD can be found",
+)
+@click.option(
+    "--seed_data_file",
+    default=os.path.join(DATA_DIR, "key_configs.yaml"),
+    type=str,
+    help="Path to directory in which the URDFs used by the DMD can be found",
+)
+@click.option("--from-edges/--from-confs", default=False)
+def run(
+    system_name, package_name, dmd, constraints, urdf_dir, seed_data_file, from_edges
+) -> None:
+
     # construct and send the ID request
     id_req = make_id_request(
-        system_name="kuka-iiwa",
-        package_name="iiwa_models",  # this must match the package in the DMD
-        dmd_file=dmd_file,
+        system_name=system_name,
+        package_name=package_name,  # this must match the package in the DMD
+        dmd_file=dmd,
         urdf_dir=urdf_dir,
-        constraints_file=constraints_file,
+        constraints_file=constraints,
     )
     id_resp = get_plan_context_id(id_req)
     print(f"Got ID: {id_resp.context_id.value}")
-    seed_configs_file = os.path.join(DATA_DIR, "key_configs.yaml")
     # construct and send the IRIS build request
-    build_req = make_iris_build_request(
-        req_id="TEST_ID",
-        context_id=id_resp.context_id,
-        seed_configs_file=seed_configs_file,
-    )
-    build_resp = start_iris_build_job(build_req)
+    print("Constructing build request...")
+    if from_edges:
+        build_req = make_build_from_edges_request(
+            req_id="TEST_ID",
+            context_id=id_resp.context_id,
+            seed_data_file=seed_data_file,
+        )
+        print("Sending request...")
+        build_resp = start_iris_build_from_edges(build_req)
+    else:
+        build_req = make_build_from_confs_request(
+            req_id="TEST_ID",
+            context_id=id_resp.context_id,
+            seed_data_file=seed_data_file,
+        )
+        print("Sending request...")
+        build_resp = start_iris_build_from_confs(build_req)
+
     if build_resp.success:
         print("Started IRIS job successfully")
     else:
