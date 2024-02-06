@@ -7,13 +7,7 @@ package proto;
  * context; concretely, a geometric configuration, and a set of optional
  * constraints. */
 message RegisterPlanContextRequest {
-  string system_name = 1;
-  string package_name = 2;
-  // the raw YAML representing the robot geometry should be dumped here
-  string model_directive_yaml = 3;
-  // set of all models referenced by the model directive
-  repeated Model models = 4;
-  Constraints constraints = 5;
+  PlanContext context = 1;
 }
 /** Response which contains the resultant unique ID for the provided planning
  * context. */
