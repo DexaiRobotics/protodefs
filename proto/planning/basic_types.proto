@@ -154,5 +154,4 @@ message PlanContext {
   string model_directive_yaml = 3;
   repeated Model models = 4;
   Constraints constraints = 5;
-  PlanContextId id = 6;
 }
