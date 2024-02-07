@@ -361,9 +361,9 @@ def start_iris_build_from_confs(
     "--seed_data_file",
     default=os.path.join(DATA_DIR, "key_configs.yaml"),
     type=str,
-    help="Path to directory in which the URDFs used by the DMD can be found",
+    help="Path to file containing seed data",
 )
-@click.option("--from-edges/--from-confs", default=False)
+@click.option("--from-edges/--from-confs", default=False, help="Whether or not the desired request is sending conf (point) or edge data.")
 def run(
     system_name, package_name, dmd, constraints, urdf_dir, seed_data_file, from_edges
 ) -> None:
