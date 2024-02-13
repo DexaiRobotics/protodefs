@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-import "types.proto";
+import "basic_types.proto";
 package proto;
 
 /** Request containing all information necessary to uniquely define a planning
@@ -8,7 +8,7 @@ package proto;
 message StartPlanRequest {
   string id = 1;
   ProblemDef def = 2;
-  string legacy_params = 3; // TODO(@davebambrick): deprecate
+  string legacy_params = 3;  // TODO(@davebambrick): deprecate
 }
 /** Response which contains the result of attempting to start computation of a
  * solution for the corresponding StartPlanRequest. */
