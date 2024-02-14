@@ -8,50 +8,47 @@ message("CMAKE_CXX_STANDARD_REQUIRED: " ${CMAKE_CXX_STANDARD_REQUIRED})
 message("CMAKE_CXX_FLAGS: " ${CMAKE_CXX_FLAGS})
 message("CMAKE_CXX_COMPILER: " ${CMAKE_CXX_COMPILER})
 
-# gRPC/Protobuf packages
+# Protobuf
 include(FindProtobuf)
 find_package(Protobuf REQUIRED)
+# gRPC must be located via pkg-config
 find_package(PkgConfig REQUIRED)
 pkg_search_module(GRPC REQUIRED grpc)
 pkg_search_module(GRPCPP REQUIRED grpc++>=1.16.1)
-include_directories(${Protobuf_INCLUDE_DIRS})
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
+# plugin which will generate gRPC C++ code
 find_program(GRPC_CPP_PLUGIN grpc_cpp_plugin)
 if (NOT GRPC_CPP_PLUGIN)
     message(FATAL_ERROR "grpc_cpp_plugin not found!")
 endif()
-
- # create a new library pointing to the api definition
-add_library(protodefs SHARED
-    ${CMAKE_CURRENT_SOURCE_DIR}/proto/planning/planner.proto
-    ${CMAKE_CURRENT_SOURCE_DIR}/proto/planning/builder.proto
-    ${CMAKE_CURRENT_SOURCE_DIR}/proto/planning/types.proto
+# create library
+file(GLOB PROTODEF_FILES 
+    ${CMAKE_CURRENT_SOURCE_DIR}/proto/planning/*.proto
 )
-# link against protobuf and gRPC
-target_link_libraries(protodefs
-    PUBLIC
+add_library(protodefs SHARED ${PROTODEF_FILES})
+target_link_libraries(protodefs PUBLIC 
     protobuf::libprotobuf
+    grpc
     grpc++
-    grpc++_reflection
 )
-# add to include directories
-target_include_directories(protodefs PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
-# 1.) generate protobuf serializations
+set(PROTO_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+# generate C++ code for Protobuf message types
 protobuf_generate(
     TARGET protodefs
-    LANGUAGE cpp
-    OUT_VAR PROTO_FILES
+    OUT_VAR PROTO_GENERATED_FILES
+    APPEND_PATH
+    PROTOC_OUT_DIR ${PROTO_BINARY_DIR}
 )
-# 2.) generate gRPC files using serializations from the previous step
+set_source_files_properties(${PROTO_GENERATED_FILES} PROPERTIES GENERATED TRUE)
+# generate C++ code for gRPC methods
 protobuf_generate(
     TARGET protodefs
+    OUT_VAR PROTO_GENERATED_FILES
     LANGUAGE grpc
-    OUT_VAR PROTO_FILES
     GENERATE_EXTENSIONS .grpc.pb.h .grpc.pb.cc
     PLUGIN "protoc-gen-grpc=${GRPC_CPP_PLUGIN}"
+    APPEND_PATH
+    PROTOC_OUT_DIR ${PROTO_BINARY_DIR}
 )
-# set as generated
-set_source_files_properties(${PROTO_FILES} PROPERTIES GENERATED TRUE)
-# add to include directories
-target_include_directories(protodefs PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+set_source_files_properties(${PROTO_GENERATED_FILES} PROPERTIES  GENERATED TRUE)
 
+target_include_directories(protodefs PUBLIC "$<BUILD_INTERFACE:${PROTO_BINARY_DIR}>")
