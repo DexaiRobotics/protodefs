@@ -217,7 +217,8 @@ def make_id_request(
     Args:
         system_name (str): Global identifier for the target system.
         package_name (str): Name of the package from which the models will be
-        located.
+        located. This MUST match the package provided for ALL models defined
+        in the DMD.
         dmd_file (str): Path to model directive file.
         urdf_dir (str): Path to directory containing all URDFs
         constraints_file (str): Path to constraints file.
@@ -334,7 +335,8 @@ def start_iris_build_from_confs(
     "--package_name",
     default="iiwa_models",
     type=str,
-    help="""Top-level namespace under which all underlying data is stored""",
+    help="""Package name under which all constituent modles must be located.
+    This name MUST MATCH the package name of all model paths in the DMD.""",
 )
 @click.option(
     "-d",
@@ -355,7 +357,7 @@ def start_iris_build_from_confs(
     "--urdf_dir",
     default=os.path.join(DATA_DIR, "urdf"),
     type=str,
-    help="Path to directory in which the URDFs used by the DMD can be found",
+    help="Path to directory in which the URDFs used by the DMD can be found for upload",
 )
 @click.option(
     "--seed_data_file",
@@ -363,7 +365,11 @@ def start_iris_build_from_confs(
     type=str,
     help="Path to file containing seed data",
 )
-@click.option("--from-edges/--from-confs", default=False, help="Whether or not the desired request is sending conf (point) or edge data.")
+@click.option(
+    "--from-edges/--from-confs",
+    default=False,
+    help="Whether or not the desired request is sending conf (point) or edge data.",
+)
 def run(
     system_name, package_name, dmd, constraints, urdf_dir, seed_data_file, from_edges
 ) -> None:

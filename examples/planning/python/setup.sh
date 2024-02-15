@@ -12,10 +12,10 @@ pushd "$DIRNAME"
 PROTO_ROOT=$(dirname "$(dirname "$(dirname "$DIRNAME")")")
 PROTO_PATH=$PROTO_ROOT/proto/planning
 declare -a protofiles=(
+  $PROTO_PATH/basic_types.proto
   $PROTO_PATH/builder.proto
   $PROTO_PATH/generate_id.proto
   $PROTO_PATH/planner.proto
-  $PROTO_PATH/types.proto
 )
 echo "Compiling definitions for protofiles located at: $PROTO_PATH"
 BUILD_DIR=build
