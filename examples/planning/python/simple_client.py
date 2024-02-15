@@ -100,7 +100,7 @@ def make_angular_constraint_msg(
     angle_upper: float,
 ) -> AngleBetweenVectorsConstraint:
     """Make a Protobuf message for an angular constraint between a vector a
-    and a vector b.
+    and a vector b, where a is fixed to a frame A, while b is fixed to a frame B.
 
 
     Args:
