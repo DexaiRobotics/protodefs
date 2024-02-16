@@ -4,7 +4,7 @@ import yaml
 import os
 import click
 import os.path
-from typing import List, Tuple, Union
+from typing import List, Tuple
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(os.path.dirname(ROOT_DIR), "data")
@@ -12,7 +12,7 @@ BUILDFILES_DIR = os.path.join(ROOT_DIR, "build")
 if BUILDFILES_DIR not in sys.path:
     sys.path.append(BUILDFILES_DIR)
 
-from build.types_pb2 import (
+from build.basic_types_pb2 import (
     Constraints,
     Model,
     SystemConf,
