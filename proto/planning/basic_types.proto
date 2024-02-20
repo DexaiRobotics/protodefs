@@ -120,23 +120,22 @@ message Parameters {
 }
 
 // Enum which controls plan retrieval behavior for a given RetrievePlanRequest.
-// Retrieval behavior is as follows:
-//   - UNSPECIFIED. Default value
-//   - BLOCKING. Wait indefinitely for the computation of the plan to complete.
-//   - IF_READY. Only return if computation is completed at the time of reciept
-//     of the request. Equivalent to a timeout of length zero.
-//   - WITH_TIMEOUT. Wait for a maximum interval of timeout_ms for computation
-//     to complete before returning failure.
 enum RetrieveType {
+  // Default value.
   UNSPECIFIED = 0;
+  // Wait indefinitely for the computation of the plan to complete.
   BLOCKING = 1;
+  // Only return if computation is completed at the time of reciept of the
+  // request. Equivalent to a "timeout" of length zero.
   IF_READY = 2;
+  // Wait for a given interval for computation to complete before returning
+  // failure.
   WITH_TIMEOUT = 3;
 }
 
 // Message containing the name of the model, which will be used to set its
 // filename, and the raw contents of its geometric representation. Currently
-// only UDRF formats are supported.*/
+// only UDRF formats are supported.
 message Model {
   string name = 1;
   string urdf_raw = 2;      // raw contents of URDF file
@@ -144,15 +143,30 @@ message Model {
   string checksum = 4;      // unique checksum for the URDF
 }
 
-// Message containing the unique hash computed from a given unique plan context.
+// Message containing the unique hash computed from a given unique plan context,
+// as well as metadata relevant to the context.
 message PlanContextId {
+  // The hash-based value.
   uint64 value = 1;
+  // The associated top-level system name.
   string system_name = 2;
 }
 
+// Message containing the required information to uniquely define a given
+// context for motion planning. Concretely, this corresponds to:
+//   1.) A set of Models, which each correspond to a constituent robot in the
+//   overall system.
+//   2.) A Model Directive, which describes the relative positioning and other
+//   properties of each model in the overall system.
+//   3.) A set of Constraints, which impose certain geometric constraints on the
+//   system.
 message PlanContext {
+  // The associated top-level system name.
   string system_name = 1;
+  // The model directive YAML contents as string.
   string model_directive_yaml = 3;
+  // The set of all robot models.
   repeated Model models = 4;
+  // The set of constraints imposed on the system.
   Constraints constraints = 5;
 }
