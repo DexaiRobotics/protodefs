@@ -4,7 +4,8 @@ import yaml
 import os
 import click
 import os.path
-from typing import List, Tuple, Union
+from typing import Mapping, List, Any
+import numpy as np
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(os.path.dirname(ROOT_DIR), "data")
@@ -12,138 +13,219 @@ BUILDFILES_DIR = os.path.join(ROOT_DIR, "build")
 if BUILDFILES_DIR not in sys.path:
     sys.path.append(BUILDFILES_DIR)
 
-from build.basic_types_pb2 import PlanContextId, ProblemDef
-from build.planner_pb2 import StartPlanRequest, RetrievePlanRequest
+from build.basic_types_pb2 import PlanContextId, ProblemDef, SystemConf, Conf, SysPoly
+from build.planner_pb2 import (
+    StartPlanRequest,
+    StartPlanResponse,
+    RetrievePlanRequest,
+    RetrievePlanResponse,
+)
 from build.planner_pb2_grpc import MotionPlannerStub
 
+K = 4
 
-def make_start_plan_request(
-    req_id: str,
-    context_id: PlanContextId,
-) -> StartPlanRequest:
-    """Make a Protobuf request message to generate a set of IRIS regions for a
-    unique planning context and set of seed data.
+
+class PiecewiseCubicPolynomial:
+    """Custom implementation for a piecewise polynomial trajectory."""
+
+    def __init__(self, breaks, P_arr: np.ndarray):
+        self.degree = K
+        self.breaks = np.array(breaks)
+        self.start, self.end = self.breaks[0], self.breaks[-1]
+        if P_arr.shape[-1] != self.degree:
+            raise ValueError(
+                f"Polynomial array of shape: {P_arr.shape} is not permitted for a cubic piecewise polynomial"
+            )
+        self.P_arr = P_arr
+
+    def rows(self):
+        return self.P_arr.shape[1]
+
+    def cols(self):
+        return self.P_arr.shape[2]
+
+    def value(self, t: float) -> np.ndarray:
+        """Compute the value of the piecewise polynomial at time t.
+
+        Args:
+            t (float): time
+
+        Returns:
+            np.ndarray: joint positions at time t
+        """
+        if t < self.start or t > self.end:
+            raise ValueError(
+                f"Polynomial is undefined for t={t} outside [{self.start}, {self.end}]!"
+            )
+        t_vec = np.array([[1, t, t**2, t**3]])
+        if t == self.start:
+            P_idx = 0
+        elif t == self.end:
+            P_idx = self.P_arr.shape[0] - 1
+        else:
+            P_idx = np.searchsorted(self.breaks[:-1], t) - 1
+        poly = self.P_arr[P_idx]
+
+        return np.sum(np.dot(poly, t_vec.T), axis=1).T
+
+
+def convert_piecewise_polynomial(
+    system_poly_msg: SysPoly,
+) -> Mapping[str, PiecewiseCubicPolynomial]:
+    """Convert a system polynomial Protobuf message into a corresponding native
+    representation. In our case, we represent each set of polynomials as an
+    array of T "breaks" [t_0, t_1, ..., t_T] and a 4-dimensional array of size
+    (T-1, R, C, K), where R is the number of joints in the robot, C the number
+    of polynomials per joint (typically 1), and K=4 is the degree of each
+    individual polynomial.
 
     Args:
-        context_id (types_pb2.PlanContextId): unique ID for the target context
-        seed_data_file (str): file containing seed configuration data
+        system_poly_msg (SysPoly): The Protobuf message
 
     Returns:
-        builder_pb2.StartBuildFromConfsRequest
+        Mapping[str, PiecewiseCubicPolynomial]: Map of robot names to polynomial representations
     """
-    return StartPlanRequest(id=req_id, context_id=context_id)
+    system_poly = {}
+    for robot, poly_msg in system_poly_msg.data.items():
+        t = len(poly_msg.breaks)
+        r, c = poly_msg.rows, poly_msg.cols
+        P_arr = np.ndarray(shape=[t - 1, r, c, K], dtype="float")
+        for i in range(t - 1):
+            for j in range(r):
+                for k in range(c):
+                    P_arr[i, j, k] = poly_msg.coeffs[(i * r * c) + (j * c) + k].data
+        system_poly[robot] = PiecewiseCubicPolynomial(
+            breaks=poly_msg.breaks, P_arr=P_arr
+        )
+    return system_poly
 
 
-def get_plan_context_id(req: RegisterPlanContextRequest) -> RegisterPlanContextResponse:
+def positions_from_polynomial(
+    system_poly: Mapping[str, PiecewiseCubicPolynomial], sampling_freq_hz: float
+) -> Mapping[str, np.ndarray]:
+    """Return a trajectory as an array of joint positions sampled from the
+    given system polynomial at a frequency in Hz.
+
+    Args:
+        system_poly (Mapping[str, Mapping[str, PiecewiseCubicPolynomial]]): Input system polynomial
+        sampling_freq_hz (float): Sampling frequency in Hz
+    Returns:
+        Mapping[str, np.ndarray]: Map of robot names to sampled joint positions
+    """
+    system_trajectory = {}
+    for robot, poly in system_poly.items():
+        t = poly.start
+        t_final = poly.end
+        traj = poly.value(t)
+        t += 1.0 / sampling_freq_hz
+        while t < t_final:
+            traj = np.vstack([traj, poly.value(t)])
+            t += 1.0 / sampling_freq_hz
+        system_trajectory[robot] = traj
+    return system_trajectory
+
+
+def make_problem_definition(
+    name: str,
+    start: SystemConf,
+    goal: SystemConf,
+    context_id: PlanContextId,
+) -> ProblemDef:
+    """Make a Protobuf message representing a planning problem definition.
+
+    Args:
+        name (str): plan name
+        start (SystemConf): start system configuration
+        goal (SystemConf): goal system configuration
+        context_id (PlanContextId): unique identifier
+
+    Returns:
+        ProblemDef: _description_
+    """
+    return ProblemDef(name=name, goal=goal, start=start, context_id=context_id)
+
+
+def make_start_plan_request(req_id: str, problem_def: ProblemDef) -> StartPlanRequest:
+    """Make a Protobuf request message to start a motion plan for a given planning problem definition.
+
+    Args:
+        req_id (str): request ID which will be used to retrieve the plan upon completion
+        problem_def (types_pb2.ProblemDef): Target planning problem
+
+    Returns:
+        planner_pb2.StartPlanRequest
+    """
+    return StartPlanRequest(
+        id=req_id, problem_def=problem_def, legacy_params="PLACEHOLDER"
+    )
+
+
+def make_retrieve_plan_request(req_id: str) -> RetrievePlanRequest:
+    """Make a Protobuf request message to retrieve a motion plan for a given planning
+    problem definition.
+
+    Args:
+        req_id (str): request ID to retrieve the completed plan
+
+    Returns:
+        planner_pb2.RetrievePlanRequest
+    """
+    return RetrievePlanRequest(id=req_id)
+
+
+def start_plan(req: StartPlanRequest) -> StartPlanResponse:
     """Send a populated request to the plan context registry service."""
-    with grpc.insecure_channel("0.0.0.0:5151") as channel:
-        stub = PlanContextRegistryStub(channel)
-        return stub.HandleRegisterPlanContextRequest(req)
+    with grpc.insecure_channel("0.0.0.0:5050") as channel:
+        stub = MotionPlannerStub(channel)
+        try:
+            return stub.HandleStartRequest(req)
+        except Exception as err:
+            print(f"Encountered error starting plan: {err}")
+            raise
 
 
-def start_iris_build_from_edges(
-    req: StartBuildFromEdgesRequest,
-) -> StartBuildResponse:
+def retrieve_plan(
+    req: RetrievePlanRequest,
+) -> RetrievePlanResponse:
     """Send a populated request to the IRIS generation service."""
-    with grpc.insecure_channel("0.0.0.0:5150") as channel:
-        stub = IrisBuilderStub(channel)
-        return stub.HandleStartBuildFromEdgesRequest(req)
-
-
-def start_iris_build_from_confs(
-    req: StartBuildFromConfsRequest,
-) -> StartBuildResponse:
-    """Send a populated request to the IRIS generation service."""
-    with grpc.insecure_channel("0.0.0.0:5150") as channel:
-        stub = IrisBuilderStub(channel)
-        return stub.HandleStartBuildFromConfsRequest(req)
+    with grpc.insecure_channel("0.0.0.0:5050") as channel:
+        stub = MotionPlannerStub(channel)
+        try:
+            return stub.HandleRetrieveRequest(req)
+        except Exception as err:
+            print(f"Encountered error retreiving plan: {err}")
+            raise
 
 
 @click.group(invoke_without_command=True)
 @click.option(
-    "-s",
-    "--system_name",
-    default="kuka-iiwa",
-    type=str,
-    help="""Top-level namespace under which all underlying data is stored""",
+    "--context_id",
+    type=int,
+    help="""Unique identifier for target context""",
 )
-@click.option(
-    "-p",
-    "--package_name",
-    default="iiwa_models",
-    type=str,
-    help="""Package name under which all constituent modles must be located.
-    This name MUST MATCH the package name of all model paths in the DMD.""",
-)
-@click.option(
-    "-d",
-    "--dmd",
-    default=os.path.join(DATA_DIR, "dmd", "iiwa_boxes.dmd.yaml"),
-    type=str,
-    help="Path to target DMD file",
-)
-@click.option(
-    "-c",
-    "--constraints",
-    default=os.path.join(DATA_DIR, "constraints", "default.yaml"),
-    type=str,
-    help="Path to target constraints file",
-)
-@click.option(
-    "-u",
-    "--urdf_dir",
-    default=os.path.join(DATA_DIR, "urdf"),
-    type=str,
-    help="Path to directory in which the URDFs used by the DMD can be found for upload",
-)
-@click.option(
-    "--seed_data_file",
-    default=os.path.join(DATA_DIR, "key_configs.yaml"),
-    type=str,
-    help="Path to file containing seed data",
-)
-@click.option(
-    "--from-edges/--from-confs",
-    default=False,
-    help="Whether or not the desired request is sending conf (point) or edge data.",
-)
-def run(
-    system_name, package_name, dmd, constraints, urdf_dir, seed_data_file, from_edges
-) -> None:
-
-    # construct and send the ID request
-    id_req = make_id_request(
-        system_name=system_name,
-        package_name=package_name,  # this must match the package in the DMD
-        dmd_file=dmd,
-        urdf_dir=urdf_dir,
-        constraints_file=constraints,
+def run(context_id) -> None:
+    # example start positions
+    q_start = [1.045, -1.270, 0.500, 0.246, 0.075, 0.182]
+    q_goal = [4.586, -0.181, -1.815, -2.818, 0.075, -2.61]
+    start = SystemConf(data={"ur5e-urdf-wrapped": Conf(data=q_start)})
+    goal = SystemConf(data={"ur5e-urdf-wrapped": Conf(data=q_goal)})
+    problem_def = make_problem_definition(
+        name="test_plan",
+        start=start,
+        goal=goal,
+        context_id=PlanContextId(value=context_id),
     )
-    id_resp = get_plan_context_id(id_req)
-    print(f"Got ID: {id_resp.context_id.value}")
-    # construct and send the IRIS build request
-    print("Constructing build request...")
-    if from_edges:
-        build_req = make_build_from_edges_request(
-            req_id="TEST_ID",
-            context_id=id_resp.context_id,
-            seed_data_file=seed_data_file,
-        )
-        print("Sending request...")
-        build_resp = start_iris_build_from_edges(build_req)
-    else:
-        build_req = make_build_from_confs_request(
-            req_id="TEST_ID",
-            context_id=id_resp.context_id,
-            seed_data_file=seed_data_file,
-        )
-        print("Sending request...")
-        build_resp = start_iris_build_from_confs(build_req)
+    # construct and send the start request
+    start_request = make_start_plan_request(req_id="TEST_ID", problem_def=problem_def)
+    start_resp = start_plan(start_request)
+    # construct and send the retrieval request
+    retrieve_request = make_retrieve_plan_request(start_resp.id)
+    retrieve_req = retrieve_plan(retrieve_request)
 
-    if build_resp.success:
-        print("Started IRIS job successfully")
-    else:
-        print(f"IRIS job failed to start: {build_resp.msg}")
+    syspoly = convert_piecewise_polynomial(retrieve_req.spline)
+    systraj = positions_from_polynomial(syspoly, 100)
+    # TODO(@davebambrick): display the trajectory
+    print(systraj["ur5e-urdf-wrapped"])
 
 
 if __name__ == "__main__":
