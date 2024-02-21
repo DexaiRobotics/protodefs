@@ -174,7 +174,7 @@ def make_retrieve_plan_request(req_id: str) -> RetrievePlanRequest:
 
 
 def start_plan(req: StartPlanRequest) -> StartPlanResponse:
-    """Send a populated request to the plan context registry service."""
+    """Send a populated start request to the motion planner and return the response."""
     with grpc.insecure_channel("0.0.0.0:5050") as channel:
         stub = MotionPlannerStub(channel)
         try:
@@ -187,7 +187,7 @@ def start_plan(req: StartPlanRequest) -> StartPlanResponse:
 def retrieve_plan(
     req: RetrievePlanRequest,
 ) -> RetrievePlanResponse:
-    """Send a populated request to the IRIS generation service."""
+    """Send a populated retrieval request to the motion planner and return the response."""
     with grpc.insecure_channel("0.0.0.0:5050") as channel:
         stub = MotionPlannerStub(channel)
         try:
