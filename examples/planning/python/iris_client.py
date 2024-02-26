@@ -12,7 +12,7 @@ BUILDFILES_DIR = os.path.join(ROOT_DIR, "build")
 if BUILDFILES_DIR not in sys.path:
     sys.path.append(BUILDFILES_DIR)
 
-from build.types_pb2 import (
+from build.basic_types_pb2 import (
     Constraints,
     Model,
     SystemConf,
