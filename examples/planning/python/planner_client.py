@@ -22,14 +22,15 @@ from build.planner_pb2 import (
 )
 from build.planner_pb2_grpc import MotionPlannerStub
 
-K = 4
+# the degree of all trajectories returned by our planner
+POLYNOMIAL_DEGREE = 4
 
 
 class PiecewiseCubicPolynomial:
     """Custom implementation for a piecewise polynomial trajectory."""
 
     def __init__(self, breaks, P_arr: np.ndarray):
-        self.degree = K
+        self.degree = POLYNOMIAL_DEGREE
         self.breaks = np.array(breaks)
         self.start, self.end = self.breaks[0], self.breaks[-1]
         if P_arr.shape[-1] != self.degree:
@@ -89,7 +90,7 @@ def convert_piecewise_polynomial(
     for robot, poly_msg in system_poly_msg.data.items():
         t = len(poly_msg.breaks)
         r, c = poly_msg.rows, poly_msg.cols
-        P_arr = np.ndarray(shape=[t - 1, r, c, K], dtype="float")
+        P_arr = np.ndarray(shape=[t - 1, r, c, POLYNOMIAL_DEGREE], dtype="float")
         for i in range(t - 1):
             for j in range(r):
                 for k in range(c):
@@ -204,7 +205,8 @@ def retrieve_plan(
     help="""Unique identifier for target context""",
 )
 def run(context_id) -> None:
-    # example start positions
+    # example start position for a UR5e robot
+    # TODO (@davebambrick): Remove and parameterize
     q_start = [1.045, -1.270, 0.500, 0.246, 0.075, 0.182]
     q_goal = [4.586, -0.181, -1.815, -2.818, 0.075, -2.61]
     start = SystemConf(data={"ur5e-urdf-wrapped": Conf(data=q_start)})
