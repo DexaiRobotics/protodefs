@@ -21,6 +21,7 @@ from build.basic_types_pb2 import (
     PositionConstraint,
     AngleBetweenVectorsConstraint,
     PlanContextId,
+    PlanContext,
 )
 from build.generate_id_pb2 import (
     RegisterPlanContextRequest,
@@ -175,7 +176,7 @@ def raw_file_contents(fname: str) -> str:
     return data
 
 
-def make_models(dmd_file: str, urdf_dir: str) -> List[Model]:
+def make_models(dmd_file: str, urdf_dir: str, package_name: str) -> List[Model]:
     """Make a vector of Protobuf messages of robot models for all URDFs
     located at the target directory.
 
@@ -199,18 +200,28 @@ def make_models(dmd_file: str, urdf_dir: str) -> List[Model]:
                 Model(
                     name=urdf_fname[: urdf_fname.find(".urdf")],
                     urdf_raw=raw_file_contents(urdf_path),
+                    package_name=package_name,
                 )
             )
     return models
 
 
-def make_id_request(
+def make_plan_context(
     system_name: str,
     package_name: str,
     dmd_file: str,
     urdf_dir: str,
     constraints_file: str,
-) -> RegisterPlanContextRequest:
+) -> PlanContext:
+    return PlanContext(
+        system_name=system_name,
+        model_directive_yaml=raw_file_contents(dmd_file),
+        models=make_models(dmd_file, urdf_dir, package_name),
+        constraints=make_constraints_msg_from_yaml(constraints_file),
+    )
+
+
+def make_id_request(context: PlanContext) -> RegisterPlanContextRequest:
     """Make a Protobuf request message to generate a unique ID for the given
     planning problem.
 
@@ -226,13 +237,7 @@ def make_id_request(
     Returns:
         generate_id_pb2.RegisterPlanContextRequest
     """
-    return RegisterPlanContextRequest(
-        system_name=system_name,
-        package_name=package_name,
-        model_directive_yaml=raw_file_contents(dmd_file),
-        models=make_models(dmd_file, urdf_dir),
-        constraints=make_constraints_msg_from_yaml(constraints_file),
-    )
+    return RegisterPlanContextRequest(context=context)
 
 
 def make_sysconf_msg(sysconf_yaml):
@@ -246,7 +251,7 @@ def make_sysconf_msg(sysconf_yaml):
 
 def make_build_from_confs_request(
     req_id: str,
-    context_id: PlanContextId,
+    context: PlanContext,
     seed_data_file: str,
 ) -> StartBuildFromConfsRequest:
     """Make a Protobuf request message to generate a set of IRIS regions for a
@@ -265,13 +270,13 @@ def make_build_from_confs_request(
         for _, sysconf in data.items():
             seed_configs.append(make_sysconf_msg(sysconf))
     return StartBuildFromConfsRequest(
-        id=req_id, context_id=context_id, seed_configs=seed_configs
+        id=req_id, context=context, seed_configs=seed_configs
     )
 
 
 def make_build_from_edges_request(
     req_id: str,
-    context_id: PlanContextId,
+    context: PlanContext,
     seed_data_file: str,
 ) -> StartBuildFromEdgesRequest:
     """Make a Protobuf request message to generate a set of IRIS regions for a
@@ -292,9 +297,7 @@ def make_build_from_edges_request(
             v2 = make_sysconf_msg(edge["v"])
             edge_msg = SystemConfEdge(v1=v1, v2=v2)
             seed_edges.append(edge_msg)
-    return StartBuildFromEdgesRequest(
-        id=req_id, context_id=context_id, seed_edges=seed_edges
-    )
+    return StartBuildFromEdgesRequest(id=req_id, context=context, seed_edges=seed_edges)
 
 
 def get_plan_context_id(req: RegisterPlanContextRequest) -> RegisterPlanContextResponse:
@@ -374,22 +377,20 @@ def run(
     system_name, package_name, dmd, constraints, urdf_dir, seed_data_file, from_edges
 ) -> None:
 
-    # construct and send the ID request
-    id_req = make_id_request(
+    # construct the context message
+    context = make_plan_context(
         system_name=system_name,
         package_name=package_name,  # this must match the package in the DMD
         dmd_file=dmd,
         urdf_dir=urdf_dir,
         constraints_file=constraints,
     )
-    id_resp = get_plan_context_id(id_req)
-    print(f"Got ID: {id_resp.context_id.value}")
     # construct and send the IRIS build request
     print("Constructing build request...")
     if from_edges:
         build_req = make_build_from_edges_request(
             req_id="TEST_ID",
-            context_id=id_resp.context_id,
+            context=context,
             seed_data_file=seed_data_file,
         )
         print("Sending request...")
@@ -397,7 +398,7 @@ def run(
     else:
         build_req = make_build_from_confs_request(
             req_id="TEST_ID",
-            context_id=id_resp.context_id,
+            context=context,
             seed_data_file=seed_data_file,
         )
         print("Sending request...")
