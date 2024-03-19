@@ -3,28 +3,28 @@ syntax = "proto3";
 import "basic_types.proto";
 package proto;
 
-/** Request containing the information corresponding to a unique planning
- * context; concretely, a geometric configuration, and a set of optional
- * constraints. */
+// Request to compute a unique hash-based identifier for a target planning
+// context.
 message RegisterPlanContextRequest {
+  // The target context.
   PlanContext context = 1;
 }
-/** Response which contains the resultant unique ID for the provided planning
- * context. */
+// Response which contains the resultant unique ID for the provided planning
+// context.
 message RegisterPlanContextResponse {
   bool success = 1;
-  // unique hash
+  // unique hash-based identifier
   PlanContextId context_id = 2;
   // msg used to convey extra information to client; usually
   // for explaining cause of error
   string msg = 3;
 }
 
-/** Given a unique planning context, return the corresponding hash value which
- * can be used to access the associated model/planner instance. The hash is
- * dependent on the actual geometric values of the provided model, so changing
- * the properties of one or more links in a model will result in different
- * hashes. */
+// Given a unique planning context, return the corresponding hash value which
+// can be used to access the associated model/planner instance. The hash is
+// dependent on the actual geometric values of the provided model, so changing
+// the properties of one or more links in a model will result in different
+// hashes.
 service PlanContextRegistry {
   rpc HandleRegisterPlanContextRequest(RegisterPlanContextRequest)
       returns (RegisterPlanContextResponse) {}
