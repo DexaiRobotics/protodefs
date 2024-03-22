@@ -25,14 +25,18 @@ message MeshcatParameters {
   repeated string display_body_frame_vec = 4;
 }
 message StartVisualizerRequest {
-  // Unique ID for the model to be visualized.
-  PlanContextId context_id = 1;
+  oneof viz_data {
+    // Unique ID for the model to be visualized.
+    PlanContextId context_id = 1;
+    // name of target DMD
+    string dmd_filename = 2;
+  }
   // Parameters which control the manner in which the model is shown in the
   // visualizer.
-  MeshcatParameters meshcat_params = 2;
+  MeshcatParameters meshcat_params = 3;
   // When true, add sliders to control each joint position.
-  bool enable_sliders = 3;
-  bool force_reload = 4;
+  bool enable_sliders = 4;
+  bool force_reload = 5;
 }
 
 service Visualizer {
