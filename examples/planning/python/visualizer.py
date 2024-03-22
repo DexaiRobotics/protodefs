@@ -46,6 +46,7 @@ def cli():
     help="Force reload of the visualizer with a new model.",
 )
 def start(id, dmd, force) -> None:
+    print(id, dmd, force)
     if id is not None:
         req = StartVisualizerRequest(
             context_id=PlanContextId(value=id), enable_sliders=True, force_reload=force
@@ -56,10 +57,11 @@ def start(id, dmd, force) -> None:
         )
     else:
         raise ValueError("A reference to a model was not added to the request!")
+    
     with grpc.insecure_channel("0.0.0.0:5550") as channel:
         stub = VisualizerStub(channel)
         resp = stub.StartVisualizer(req)
-
+    print(resp)
 
 @cli.command("stop", help="Stop the visualizer.")
 def stop() -> None:
