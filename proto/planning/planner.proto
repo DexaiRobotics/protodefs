@@ -25,8 +25,9 @@ message StartPlanResponse {
 message RetrievePlanRequest {
   string id = 1;
   RetrieveType retrieve_type = 2;
-  uint32 timeout_ms = 3;
+  uint32 retrieval_timeout_ms = 3;
   TrajectoryType trajectory_type = 4;
+  uint32 traj_interval_ms = 5;
 }
 
 /** Response which contains the result of retrieving the plan with the given ID.
@@ -37,7 +38,10 @@ message RetrievePlanResponse {
   // msg used to convey extra information to client; usually
   // for explaining cause of error
   string msg = 3;
-  SystemPoly spline = 4;
+  oneof plan_data {
+    SystemPoly spline = 4;
+    SystemTrajectory traj = 5;
+  }
 }
 
 service MotionPlanner {
