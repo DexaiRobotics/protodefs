@@ -2,6 +2,9 @@ syntax = "proto3";
 
 package proto;
 
+// Empty type for RPCs which require no specific request/response data.
+message Null {}
+
 // Joint configuration for a single robot.
 message Conf {
   // Array of joint position data, i.e., data = [q_0, q_1, ..., q_N] for a

@@ -4,7 +4,7 @@ import yaml
 import os
 import click
 import os.path
-from typing import List, Tuple, Union
+from typing import List, Tuple
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(os.path.dirname(ROOT_DIR), "data")

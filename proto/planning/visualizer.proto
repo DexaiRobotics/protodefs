@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+import "basic_types.proto";
+package proto;
+
+message Rgba {
+  // Red
+  double r = 1;
+  // Green
+  double g = 2;
+  // Blue
+  double b = 3;
+  // Alpha (transparency)
+  double a = 4;
+}
+message MeshcatParameters {
+  // Show visual geometry when true
+  bool visual = 1;
+  // Show collision geometry when true
+  bool collision = 2;
+  // Map of body names to specific colors
+  map<string, Rgba> color_map = 3;
+  // Bodies named here will have their reference frames displayed in the
+  // visualizer.
+  repeated string display_body_frame_vec = 4;
+}
+message StartVisualizerRequest {
+  oneof viz_data {
+    // Unique ID for the model to be visualized.
+    PlanContextId context_id = 1;
+    // name of target DMD
+    string dmd_filename = 2;
+  }
+  // Parameters which control the manner in which the model is shown in the
+  // visualizer.
+  MeshcatParameters meshcat_params = 3;
+  // When true, add sliders to control each joint position.
+  bool enable_sliders = 4;
+  bool force_reload = 5;
+}
+
+service Visualizer {
+  rpc StartVisualizer(StartVisualizerRequest) returns (Null) {}
+  rpc StopVisualizer(Null) returns (Null) {}
+  rpc HandleVisualizeRegionsRequest(Null) returns (Null) {}
+}
