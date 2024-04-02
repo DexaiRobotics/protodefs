@@ -3,15 +3,15 @@ syntax = "proto3";
 import "basic_types.proto";
 package proto;
 
-/** Request containing all information necessary to uniquely define a planning
- * problem in a format accepted by the planner. */
+// Request containing all information necessary to uniquely define a planning
+// problem in a format accepted by the planner.
 message StartPlanRequest {
   string id = 1;
   ProblemDef problem_def = 2;
   string legacy_params = 3;  // TODO(@davebambrick): deprecate
 }
-/** Response which contains the result of attempting to start computation of a
- * solution for the corresponding StartPlanRequest. */
+// Response which contains the result of attempting to start computation of a
+// solution for the corresponding StartPlanRequest.
 message StartPlanResponse {
   string id = 1;
   bool success = 2;
@@ -20,18 +20,23 @@ message StartPlanResponse {
   string msg = 3;
 }
 
-/** Request to retrieve a plan with a unique ID, in the manner dictated by the
- * given retrieval type. */
+// Request to retrieve a plan with a unique ID, in the manner dictated by the
+// given retrieval type.
 message RetrievePlanRequest {
   string id = 1;
+  // Type indicating the desired retrieval behavior for the given request.
   RetrieveType retrieve_type = 2;
+  // Timeout in milliseconds to wait for a plan to complete when
+  // RetrieveType::WITH_TIMEOUT is specified.
   uint32 retrieval_timeout_ms = 3;
-  TrajectoryType trajectory_type = 4;
+  // Type of plan to be returned, either as a polynomial function or an
+  // array of waypoints.
+  PlanType plan_type = 4;
+  // Sampling interval in milliseconds for a waypoint plan.
   uint32 traj_interval_ms = 5;
 }
 
-/** Response which contains the result of retrieving the plan with the given ID.
- */
+// Response which contains the result of retrieving the plan with the given ID.
 message RetrievePlanResponse {
   string id = 1;
   bool success = 2;
@@ -39,7 +44,9 @@ message RetrievePlanResponse {
   // for explaining cause of error
   string msg = 3;
   oneof plan_data {
+    // The returned plan as a spline, given as a polynomial function of time.
     SystemPoly spline = 4;
+    // The returned plan as a waypoint trajectory.
     SystemTrajectory traj = 5;
   }
 }

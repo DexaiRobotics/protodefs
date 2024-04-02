@@ -140,7 +140,7 @@ enum RetrieveType {
 }
 
 // Enum which controls the format of the returned trajectory.
-enum TrajectoryType {
+enum PlanType {
   // Default value.
   UNSPECIFIED_TRAJ_TYPE = 0;
   // Return as a system polynomial.
