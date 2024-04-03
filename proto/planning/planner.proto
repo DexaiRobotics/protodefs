@@ -45,7 +45,7 @@ message RetrievePlanResponse {
   string msg = 3;
   oneof plan_data {
     // The returned plan as a spline, given as a polynomial function of time.
-    SystemPoly spline = 4;
+    SystemPolynomial spline = 4;
     // The returned plan as a waypoint trajectory.
     SystemTrajectory traj = 5;
   }

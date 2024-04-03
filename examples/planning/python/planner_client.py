@@ -18,7 +18,7 @@ from build.basic_types_pb2 import (
     ProblemDef,
     SystemConf,
     Conf,
-    SystemPoly,
+    SystemPolynomial,
 )
 from build.planner_pb2 import (
     StartPlanRequest,
@@ -77,7 +77,7 @@ class PiecewiseCubicPolynomial:
 
 
 def convert_piecewise_polynomial(
-    system_poly_msg: SystemPoly,
+    system_poly_msg: SystemPolynomial,
 ) -> Mapping[str, PiecewiseCubicPolynomial]:
     """Convert a system polynomial Protobuf message into a corresponding native
     representation. In our case, we represent each set of polynomials as an
@@ -87,7 +87,7 @@ def convert_piecewise_polynomial(
     individual polynomial.
 
     Args:
-        system_poly_msg (SystemPoly): The Protobuf message
+        system_poly_msg (SystemPolynomial): The Protobuf message
 
     Returns:
         Mapping[str, PiecewiseCubicPolynomial]: Map of robot names to polynomial representations

@@ -38,7 +38,7 @@ message Coeffs {
 //
 // note: the coefficients are stored in this message type as an array of arrays,
 // so care must be taken to properly unpack the data according to the provided
-message PiecewisePoly {
+message PiecewisePolynomial {
   // Array of points in time which represent the intervals over which each
   // constituent polynomial is defined.
   repeated double breaks = 1;
@@ -56,9 +56,9 @@ message PiecewisePoly {
 
 // System polynomial. Akin to the "system configuration", represent a map of
 // individual piecewise polynomials to their respective target robots.
-message SystemPoly {
+message SystemPolynomial {
   // A map of robot names to individual piecewise polynomials.
-  map<string, PiecewisePoly> data = 1;
+  map<string, PiecewisePolynomial> data = 1;
 }
 
 // System trajectory. An array of system configurations in time.
