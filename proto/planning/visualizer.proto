@@ -37,6 +37,7 @@ message StartVisualizerRequest {
   // When true, add sliders to control each joint position.
   bool enable_sliders = 4;
   bool force_reload = 5;
+  bool show_iris_regions = 6;
 }
 
 service Visualizer {
