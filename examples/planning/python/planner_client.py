@@ -13,7 +13,13 @@ BUILDFILES_DIR = os.path.join(ROOT_DIR, "build")
 if BUILDFILES_DIR not in sys.path:
     sys.path.append(BUILDFILES_DIR)
 
-from build.basic_types_pb2 import PlanContextId, ProblemDef, SystemConf, Conf, SysPoly
+from build.basic_types_pb2 import (
+    PlanContextId,
+    ProblemDef,
+    SystemConf,
+    Conf,
+    SystemPolynomial,
+)
 from build.planner_pb2 import (
     StartPlanRequest,
     StartPlanResponse,
@@ -71,7 +77,7 @@ class PiecewiseCubicPolynomial:
 
 
 def convert_piecewise_polynomial(
-    system_poly_msg: SysPoly,
+    system_poly_msg: SystemPolynomial,
 ) -> Mapping[str, PiecewiseCubicPolynomial]:
     """Convert a system polynomial Protobuf message into a corresponding native
     representation. In our case, we represent each set of polynomials as an
@@ -81,7 +87,7 @@ def convert_piecewise_polynomial(
     individual polynomial.
 
     Args:
-        system_poly_msg (SysPoly): The Protobuf message
+        system_poly_msg (SystemPolynomial): The Protobuf message
 
     Returns:
         Mapping[str, PiecewiseCubicPolynomial]: Map of robot names to polynomial representations
