@@ -223,6 +223,7 @@ def retrieve_plan(
 @click.option(
     "--interval",
     type=int,
+    default=50,
     help="""Sampling interval in milliseconds""",
 )
 def run(context_id, poly, interval) -> None:
