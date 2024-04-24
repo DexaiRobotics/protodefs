@@ -1,6 +1,5 @@
 import grpc
 import sys
-import yaml
 import os
 import click
 import os.path
@@ -20,6 +19,7 @@ from build.basic_types_pb2 import (
     Conf,
     SystemPolynomial,
     PlanType,
+    RetrieveType
 )
 from build.planner_pb2 import (
     StartPlanRequest,
@@ -181,7 +181,7 @@ def make_retrieve_plan_request(
         planner_pb2.RetrievePlanRequest
     """
     return RetrievePlanRequest(
-        id=req_id, plan_type=plan_type, traj_interval_ms=traj_inverval_ms
+        id=req_id, retrieve_type=RetrieveType.BLOCKING, plan_type=plan_type, traj_interval_ms=traj_inverval_ms
     )
 
 
@@ -230,10 +230,10 @@ def run(context_id, poly, interval) -> None:
     # example start position for a UR5e robot
     # TODO (@davebambrick): Remove and parameterize
 
-    q_start = [0.419, 0.939, -1.886, 0.303, 1.008, -0.877, 0]
+    q_start = [0.419, 0.939, -1.886, -1.242, 1.008, -0.877, 0]
     q_goal = [0.623, -0.741, 1.78, -1.15, 0.687, 1.12, 0]
-    start = SystemConf(data={"kuka-iiwa": Conf(data=q_start)})
-    goal = SystemConf(data={"kuka-iiwa": Conf(data=q_goal)})
+    start = SystemConf(data={"iiwa": Conf(data=q_start)})
+    goal = SystemConf(data={"iiwa": Conf(data=q_goal)})
     problem_def = make_problem_definition(
         name="test_plan",
         start=start,
