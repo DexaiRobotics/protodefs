@@ -344,7 +344,7 @@ def start_iris_build_from_confs(
 @click.option(
     "-d",
     "--dmd",
-    default=os.path.join(DATA_DIR, "dmd", "iiwa_boxes.dmd.yaml"),
+    default=os.path.join(DATA_DIR, "dmd", "iiwa_only.dmd.yaml"),
     type=str,
     help="Path to target DMD file",
 )
