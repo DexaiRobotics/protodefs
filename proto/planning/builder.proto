@@ -3,33 +3,36 @@ syntax = "proto3";
 import "basic_types.proto";
 package proto;
 
-/** Request containing all information necessary to start generating a set of
- * IRIS regions for a given planning context from a set of seed configurations.
- */
-message StartBuildFromConfsRequest {
-  string id = 1;
-  // Unique ID for a given plan context
-  PlanContext context = 2;
-  // set of configurations; this data can be used to populate IRIS regions
-  // either directly, or by first computing edges between each valid pair
-  // in the set and then sampling from those edges
-  repeated SystemConf seed_configs = 3;
+// A vector of system configurations.
+message SystemConfVec {
+  repeated SystemConf data = 1;
 }
 
-/** Request containing all information necessary to start generating a set of
- * IRIS regions for a given planning context from a set of edges which satisfy
- * the given context. */
-message StartBuildFromEdgesRequest {
-  string id = 1;
-  // Unique ID for a given plan context
-  PlanContext context = 2;
-  // set of edges, used to populate IRIS regions by sampling points along each
-  // valid edge
-  repeated SystemConfEdge seed_edges = 3;
+// A vector of system configuration edges.
+message SystemConfEdgeVec {
+  repeated SystemConfEdge data = 1;
 }
 
-/** Response which contains the result of attempting to start computation of a
- * solution for the corresponding StartBuildFromConfsRequest. */
+// Request to start generating a set of IRIS regions for a given planning
+// context from some set of seed data.
+message StartBuildRequest {
+  // The request ID.
+  string id = 1;
+  // Unique target context for which the regions will be generated.
+  PlanContext context = 2;
+  oneof seed_data {
+    // A vector of system configs.
+    SystemConfVec sysconf_vec = 3;
+    // A vector of system config edges.
+    SystemConfEdgeVec sysconf_edge_vec = 4;
+    // A flag which will trigger a build from the context's PRM database
+    // (CURRENTLY UNIMPLEMENTED).
+    bool use_prm = 5;
+  }
+}
+
+// Response which contains the result of attempting to start computation of a
+// solution for the corresponding StartBuildRequest.
 message StartBuildResponse {
   string id = 1;
   bool success = 2;
@@ -38,29 +41,23 @@ message StartBuildResponse {
   string msg = 3;
 }
 
-/** Request to retrieve the status of a given IRIS region generation job with a
- * unique ID. */
+// Request to retrieve the status of a given IRIS region generation job with a
+// unique ID.
 message ReportBuildStatusRequest {
   string id = 1;
 }
 
-/** Response which contains the result of retrieving the status of the job with
- * the given ID. */
+// Response which contains the result of retrieving the status of the job with
+// the given ID.
 message ReportBuildStatusResponse {
   string id = 1;
-  bool complete = 2;
-  string msg = 3;
 }
 
 service IrisBuilder {
-  /** Start a build job from a set of seed confiugrations. */
-  rpc HandleStartBuildFromConfsRequest(StartBuildFromConfsRequest)
-      returns (StartBuildResponse) {}
-  /** Start a build job from a set of seed confiugration edges. */
-  rpc HandleStartBuildFromEdgesRequest(StartBuildFromEdgesRequest)
-      returns (StartBuildResponse) {}
-  /** Return a reoprt on the status of a build job with the given original
-   * request ID. */
+  // Start a build job with some set of seed data.
+  rpc HandleStartBuildRequest(StartBuildRequest) returns (StartBuildResponse) {}
+  // Return a reoprt on the status of a build job with the given original
+  // request ID.
   rpc HandleReportStatusRequest(ReportBuildStatusRequest)
       returns (ReportBuildStatusResponse) {}
 }
