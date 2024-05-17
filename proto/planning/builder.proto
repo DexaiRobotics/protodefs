@@ -13,6 +13,10 @@ message SystemConfEdgeVec {
   repeated SystemConfEdge data = 1;
 }
 
+message RoadmapData {
+  int32 num_samples = 1;
+}
+
 // Request to start generating a set of IRIS regions for a given planning
 // context from some set of seed data.
 message StartBuildRequest {
@@ -26,8 +30,7 @@ message StartBuildRequest {
     // A vector of system config edges.
     SystemConfEdgeVec sysconf_edge_vec = 4;
     // A flag which will trigger a build from the context's PRM database
-    // (CURRENTLY UNIMPLEMENTED).
-    bool use_prm = 5;
+    RoadmapData roadmap_data = 5;
   }
 }
 
