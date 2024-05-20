@@ -20,13 +20,45 @@ message SystemConf {
   map<string, Conf> data = 1;
 }
 
-// Pair of system configurations representing an edge in the configuration
-// space.
+// Ordered pair of system configurations.
 message SystemConfEdge {
   // Vertex 1
   SystemConf u = 1;
   // Vertex 2
   SystemConf v = 2;
+}
+
+// Quaternion.
+message Quaternion {
+  double w = 1;
+  double x = 2;
+  double y = 3;
+  double z = 4;
+}
+
+// A message representing a rigid transformation of a frame A relative to a
+// frame B.
+message RigidTransform {
+  // The target frame A.
+  string frame_A = 1;
+  // The relative frame B.
+  string frame_B = 2;
+  // A 3-vector representing the translation of the origin of frame A relative
+  // to the origin of frame B.
+  repeated double translation = 3;
+  // The rotation of the origin of frame A relative to the origin of frame B.
+  oneof rotation {
+    // Quaternion representation.
+    Quaternion quat = 4;
+    // TODO(@davebambrick): Add RPY, rotation matrix
+  }
+}
+
+message State {
+  oneof data {
+    SystemConf system_conf = 1;
+    RigidTransform rigid_transform = 2;
+  }
 }
 
 // Real-valued coefficients of a single polynomial.
@@ -101,24 +133,18 @@ message ConstraintsSet {
   repeated PositionConstraint pos_constraints = 1;
   // The set of all angle constraints.
   repeated AngleBetweenVectorsConstraint angle_constraints = 2;
-  // TODO(@davebambrick): Add collision filtering
 }
 
 // The set of all information which uniquely defines a planning problem.
 message ProblemDef {
   // Plan name.
   string name = 1;
-  // Goal configuration.
-  SystemConf goal = 2;
-  // Start configuration.
-  SystemConf start = 3;
-  Parameters params = 4;
-  ConstraintsSet constraints = 5;
-  // TODO(@davebambrick): deprecate ASAP
-  double orientation_tol = 6;
-  bool use_columnar_constraint = 7;
-  bool use_height_constraint = 8;
-  PlanContextId context_id = 9;
+  // Goal state.
+  State goal = 2;
+  // Start state.
+  State start = 3;
+  PlanContextId context_id = 4;
+  Parameters params = 5;
 }
 
 // Parameters which provide supplemental information to the planner (f.e., what

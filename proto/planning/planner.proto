@@ -8,7 +8,6 @@ package proto;
 message StartPlanRequest {
   string id = 1;
   ProblemDef problem_def = 2;
-  string legacy_params = 3;  // TODO(@davebambrick): deprecate
 }
 // Response which contains the result of attempting to start computation of a
 // solution for the corresponding StartPlanRequest.
