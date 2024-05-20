@@ -68,6 +68,7 @@ message Coeffs {
   // data = [c_0, c_1, c_2, c_3].
   repeated double data = 1;
 }
+
 // A scalar piecewise polynomial trajectory in time. In practice, we encode
 // robot trajectories  where for each interval [t, t'] we define a
 // univariate cubic (in time t) polynomial for every robot joint.
