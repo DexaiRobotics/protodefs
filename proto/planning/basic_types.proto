@@ -24,10 +24,11 @@ message SystemConf {
 // space.
 message SystemConfEdge {
   // Vertex 1
-  SystemConf v1 = 1;
+  SystemConf u = 1;
   // Vertex 2
-  SystemConf v2 = 2;
+  SystemConf v = 2;
 }
+
 // Real-valued coefficients of a single polynomial.
 message Coeffs {
   // Array of term-by-term coefficients. For a polynomial of the form
@@ -35,6 +36,7 @@ message Coeffs {
   // data = [c_0, c_1, c_2, c_3].
   repeated double data = 1;
 }
+
 // A scalar piecewise polynomial trajectory in time. In practice, we encode
 // robot trajectories  where for each interval [t, t'] we define a
 // univariate cubic (in time t) polynomial for every robot joint.
@@ -95,7 +97,7 @@ message AngleBetweenVectorsConstraint {
   double angle_upper = 6;
 }
 // The set of all constraints for a given planning problem.
-message Constraints {
+message ConstraintsSet {
   // The set of all position constraints.
   repeated PositionConstraint pos_constraints = 1;
   // The set of all angle constraints.
@@ -112,7 +114,7 @@ message ProblemDef {
   // Start configuration.
   SystemConf start = 3;
   Parameters params = 4;
-  Constraints constraints = 5;
+  ConstraintsSet constraints = 5;
   // TODO(@davebambrick): deprecate ASAP
   double orientation_tol = 6;
   bool use_columnar_constraint = 7;
@@ -177,15 +179,17 @@ message PlanContextId {
 //   overall system.
 //   2.) A Model Directive, which describes the relative positioning and other
 //   properties of each model in the overall system.
-//   3.) A set of Constraints, which impose certain geometric constraints on the
-//   system.
+//   3.) A set of ConstraintsSet, which impose certain geometric constraints on
+//   the system.
 message PlanContext {
   // The associated top-level system name.
   string system_name = 1;
   // The model directive YAML contents as string.
-  string model_directive_yaml = 3;
+  string model_directive_raw = 2;
   // The set of all robot models.
-  repeated Model models = 4;
+  repeated Model models = 3;
   // The set of constraints imposed on the system.
-  Constraints constraints = 5;
+  ConstraintsSet constraints = 4;
+  // The ID of the context.
+  PlanContextId id = 5;
 }

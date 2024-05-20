@@ -19,7 +19,7 @@ from build.basic_types_pb2 import (
     Conf,
     SystemPolynomial,
     PlanType,
-    RetrieveType
+    RetrieveType,
 )
 from build.planner_pb2 import (
     StartPlanRequest,
@@ -163,13 +163,11 @@ def make_start_plan_request(req_id: str, problem_def: ProblemDef) -> StartPlanRe
     Returns:
         planner_pb2.StartPlanRequest
     """
-    return StartPlanRequest(
-        id=req_id, problem_def=problem_def, legacy_params="PLACEHOLDER"
-    )
+    return StartPlanRequest(id=req_id, problem_def=problem_def)
 
 
 def make_retrieve_plan_request(
-    req_id: str, plan_type: PlanType, traj_inverval_ms: int = 0
+    req_id: str, plan_type: PlanType = PlanType.SYSTEM_POLY, traj_inverval_ms: int = 0
 ) -> RetrievePlanRequest:
     """Make a Protobuf request message to retrieve a motion plan for a given planning
     problem definition.
@@ -181,7 +179,10 @@ def make_retrieve_plan_request(
         planner_pb2.RetrievePlanRequest
     """
     return RetrievePlanRequest(
-        id=req_id, retrieve_type=RetrieveType.BLOCKING, plan_type=plan_type, traj_interval_ms=traj_inverval_ms
+        id=req_id,
+        retrieve_type=RetrieveType.BLOCKING,
+        plan_type=plan_type,
+        traj_interval_ms=traj_inverval_ms,
     )
 
 
@@ -230,10 +231,10 @@ def run(context_id, poly, interval) -> None:
     # example start position for a UR5e robot
     # TODO (@davebambrick): Remove and parameterize
 
-    q_start = [0.419, 0.939, -1.886, -1.242, 1.008, -0.877, 0]
-    q_goal = [0.623, -0.741, 1.78, -1.15, 0.687, 1.12, 0]
-    start = SystemConf(data={"iiwa": Conf(data=q_start)})
-    goal = SystemConf(data={"iiwa": Conf(data=q_goal)})
+    q_start = [1.045,-1.27,0.5,0.246,0.075,0.182]
+    q_goal = [4.586,-0.181,-1.815,-2.818,0.075,-2.61]
+    start = SystemConf(data={"ur5e": Conf(data=q_start)})
+    goal = SystemConf(data={"ur5e": Conf(data=q_goal)})
     problem_def = make_problem_definition(
         name="test_plan",
         start=start,
@@ -242,15 +243,14 @@ def run(context_id, poly, interval) -> None:
     )
     # construct and send the start request
     start_request = make_start_plan_request(req_id="TEST_ID", problem_def=problem_def)
+    print(start_request)
     start_resp = start_plan(start_request)
     # construct and send the retrieval request
     type = PlanType.SYSTEM_POLY if poly else PlanType.SYSTEM_TRAJECTORY
     retrieve_request = make_retrieve_plan_request(start_resp.id, type, interval)
-    retrieve_req = retrieve_plan(retrieve_request)
+    retrieve_resp = retrieve_plan(retrieve_request)
     print(retrieve_request)
-    syspoly = convert_piecewise_polynomial(retrieve_req.spline)
-    systraj = positions_from_polynomial(syspoly, 100)
-
+    print(retrieve_resp)
 
 
 if __name__ == "__main__":
