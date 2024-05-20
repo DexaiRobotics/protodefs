@@ -13,7 +13,9 @@ message SystemConfEdgeVec {
   repeated SystemConfEdge data = 1;
 }
 
+// Data used to construct a PRM roadmap.
 message RoadmapData {
+  // Number of samples from which to generate a PRM.
   int32 num_samples = 1;
 }
 
@@ -29,7 +31,8 @@ message StartBuildRequest {
     SystemConfVec sysconf_vec = 3;
     // A vector of system config edges.
     SystemConfEdgeVec sysconf_edge_vec = 4;
-    // A flag which will trigger a build from the context's PRM database
+    // Data used to construct a sample-based PRM. The resulting discrete edges
+    // will be used to seed the IRIS regions.
     RoadmapData roadmap_data = 5;
   }
 }
