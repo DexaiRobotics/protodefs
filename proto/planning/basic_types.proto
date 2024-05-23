@@ -56,7 +56,9 @@ message RigidTransform {
 
 message State {
   oneof data {
+    // System configuration.
     SystemConf system_conf = 1;
+    // Rigid transformation between two frames.
     RigidTransform rigid_transform = 2;
   }
 }
@@ -146,6 +148,8 @@ message ProblemDef {
   State start = 3;
   PlanContextId context_id = 4;
   Parameters params = 5;
+  // Initial guess for IK solver.
+  SystemConf ik_seed = 6;
 }
 
 // Parameters which provide supplemental information to the planner (f.e., what
