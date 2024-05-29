@@ -12,12 +12,8 @@ message RegisterPlanContextRequest {
 // Response which contains the resultant unique ID for the provided planning
 // context.
 message RegisterPlanContextResponse {
-  bool success = 1;
   // unique hash-based identifier
-  PlanContextId context_id = 2;
-  // msg used to convey extra information to client; usually
-  // for explaining cause of error
-  string msg = 3;
+  PlanContextId context_id = 1;
 }
 
 // Given a unique planning context, return the corresponding hash value which
