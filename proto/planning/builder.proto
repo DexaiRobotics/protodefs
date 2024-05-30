@@ -40,11 +40,8 @@ message StartBuildRequest {
 // Response which contains the result of attempting to start computation of a
 // solution for the corresponding StartBuildRequest.
 message StartBuildResponse {
+  // ID of request. Used to track job status.
   string id = 1;
-  bool success = 2;
-  // msg used to convey extra information to client; usually
-  // for explaining cause of error
-  string msg = 3;
 }
 
 // Request to retrieve the status of a given IRIS region generation job with a
