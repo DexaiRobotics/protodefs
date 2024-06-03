@@ -17,6 +17,7 @@ message SystemConfEdgeVec {
 message RoadmapData {
   // Number of samples from which to generate a PRM.
   int32 num_samples = 1;
+  bool use_roadmap = 2;
 }
 
 // Request to start generating a set of IRIS regions for a given planning
