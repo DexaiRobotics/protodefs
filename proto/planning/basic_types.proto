@@ -28,7 +28,12 @@ message SystemConfEdge {
   SystemConf v = 2;
 }
 
-// Quaternion.
+message Vector3 {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+}
+// Quaternion representing q = w + x*i + y*j + z*k.
 message Quaternion {
   double w = 1;
   double x = 2;
@@ -36,30 +41,37 @@ message Quaternion {
   double z = 4;
 }
 
-// A message representing a rigid transformation of a frame A relative to a
-// frame B.
+// A message representing a rigid transformation of a frame B relative to a
+// frame A.
 message RigidTransform {
-  // The target frame A.
-  string frame_A = 1;
-  // The relative frame B.
-  string frame_B = 2;
   // A 3-vector representing the translation of the origin of frame A relative
   // to the origin of frame B.
-  repeated double translation = 3;
+  Vector3 translation = 1;
   // The rotation of the origin of frame A relative to the origin of frame B.
   oneof rotation {
     // Quaternion representation.
-    Quaternion quat = 4;
+    Quaternion quat = 2;
     // TODO(@davebambrick): Add RPY, rotation matrix
   }
+}
+
+// A message representating a rigid transformation of a frame B relative to a
+// frame A.
+message FrameRelativePose {
+  // The reference frame A.
+  string frame_A = 1;
+  // The target frame B.
+  string frame_B = 2;
+  // The rigid transformation of frame B relative to frame A.
+  RigidTransform X_AB = 3;
 }
 
 message State {
   oneof data {
     // System configuration.
     SystemConf system_conf = 1;
-    // Rigid transformation between two frames.
-    RigidTransform rigid_transform = 2;
+    // Relative pose of a target frame against a reference frame.
+    FrameRelativePose pose = 2;
   }
 }
 
