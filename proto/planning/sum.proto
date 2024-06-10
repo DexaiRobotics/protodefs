@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package proto;
+
+// A request containing two numbers to be added together.
+message AddTwoNumbersRequest {
+  double x = 1;  // Each field must have a unique number assigned to it!
+  double y = 2;
+}
+// A response containing the result of summing together two numbers.
+message AddTwoNumbersResponse {
+  double result = 1;
+}
+service SumService {
+  rpc AddTwoNumbers(AddTwoNumbersRequest) returns (AddTwoNumbersResponse);
+}

@@ -7,6 +7,8 @@ package proto;
 // problem in a format accepted by the planner.
 message StartPlanRequest {
   string id = 1;
+  // Planning problem definition containing the start and goal states, plus
+  // information specifying the target planning scene.
   ProblemDef problem_def = 2;
 }
 // Response which contains the result of attempting to start computation of a
