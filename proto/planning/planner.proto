@@ -43,9 +43,21 @@ message RetrievePlanResponse {
     SystemTrajectory traj = 3;
   }
 }
+// A request containing two numbers to be added together.
+message AddTwoNumbersDracoRequest {
+  double x = 1;  // Each field must have a unique number assigned to it!
+  double y = 2;
+  PlanContextId context_id = 3;  // Now we need to know which Draco to access.
+}
+// A response containing the result of summing together two numbers.
+message AddTwoNumbersDracoResponse {
+  double result = 1;
+}
 
 service MotionPlanner {
   rpc HandleStartRequest(StartPlanRequest) returns (StartPlanResponse) {}
   rpc HandleRetrieveRequest(RetrievePlanRequest)
       returns (RetrievePlanResponse) {}
+  rpc AddTwoNumbersDraco(AddTwoNumbersDracoRequest)
+      returns (AddTwoNumbersDracoResponse);
 }
