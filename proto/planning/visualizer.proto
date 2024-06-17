@@ -22,7 +22,7 @@ message MeshcatParameters {
   map<string, Rgba> color_map = 3;
   // Bodies named here will have their reference frames displayed in the
   // visualizer.
-  repeated string display_body_frame_vec = 4;
+  repeated string end_effector_frame_vec = 4;
 }
 message StartVisualizerRequest {
   oneof viz_data {
