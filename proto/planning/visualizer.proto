@@ -22,7 +22,7 @@ message MeshcatParameters {
   map<string, Rgba> color_map = 3;
   // Bodies named here will have their reference frames displayed in the
   // visualizer.
-  repeated string display_body_frame_vec = 4;
+  repeated string end_effector_frame_vec = 4;
 }
 message StartVisualizerRequest {
   oneof viz_data {
@@ -34,10 +34,11 @@ message StartVisualizerRequest {
   // Parameters which control the manner in which the model is shown in the
   // visualizer.
   MeshcatParameters meshcat_params = 3;
+  bool force_reload = 4;
   // When true, add sliders to control each joint position.
-  bool enable_sliders = 4;
-  bool force_reload = 5;
+  bool enable_sliders = 5;
   bool show_iris_regions = 6;
+  bool show_prm = 7;
 }
 
 service Visualizer {
