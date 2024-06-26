@@ -1,10 +1,11 @@
-import grpc
-import sys
-import yaml
 import os
-import click
 import os.path
+import sys
 from typing import List, Tuple, Union
+
+import click
+import grpc
+import yaml
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(os.path.dirname(ROOT_DIR), "data")
@@ -13,11 +14,9 @@ IIWA_ID = 16791776422234053788
 if BUILDFILES_DIR not in sys.path:
     sys.path.append(BUILDFILES_DIR)
 
-from build.basic_types_pb2 import PlanContextId
-
+from build.basic_types_pb2 import Null, PlanContextId
 from build.visualizer_pb2 import StartVisualizerRequest
 from build.visualizer_pb2_grpc import VisualizerStub
-from build.basic_types_pb2 import Null
 
 
 @click.group()
@@ -40,6 +39,12 @@ def cli():
 )
 @click.option(
     "--iris",
+    is_flag=True,
+    default=False,
+    help="Show IRIS regions for the given context.",
+)
+@click.option(
+    "--prm",
     is_flag=True,
     default=False,
     help="Show IRIS regions for the given context.",
