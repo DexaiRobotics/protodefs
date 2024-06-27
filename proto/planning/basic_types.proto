@@ -66,6 +66,7 @@ message FrameRelativePose {
   RigidTransform X_AB = 3;
 }
 
+// State to assign the start and goal of any planning problem.
 message State {
   oneof data {
     // System configuration.
@@ -114,7 +115,9 @@ message SystemPolynomial {
 
 // System trajectory. An array of system configurations in time.
 message SystemTrajectory {
+  // Array of system configurations.
   repeated SystemConf data = 1;
+  // Sampling interval in milliseconds between each waypoint.
   uint32 interval_ms = 2;
 }
 
@@ -150,6 +153,15 @@ message ConstraintsSet {
   repeated AngleBetweenVectorsConstraint angle_constraints = 2;
 }
 
+// Enum which specifies the desired type of returned solution.
+enum SolutionType {
+  // Default value.
+  UNSPECIFIED_SOLUTION_TYPE = 0;
+  // Return a trajectory which is linear in Cartesian space.
+  CARTESIAN_LINEAR = 1;
+  // Return a trajectory which requires the minimum amount of time to complete.
+  TIME_OPTIMAL = 2;
+}
 // The set of all information which uniquely defines a planning problem.
 message ProblemDef {
   // Plan name.
@@ -162,6 +174,8 @@ message ProblemDef {
   Parameters params = 5;
   // Initial guess for IK solver.
   SystemConf ik_seed = 6;
+  // Option speciying the form of the computed solution.
+  SolutionType solution_type = 7;
 }
 
 // Parameters which provide supplemental information to the planner (f.e., what
