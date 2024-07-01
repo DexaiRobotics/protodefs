@@ -48,6 +48,13 @@ message SetPositionsRequest {
   }
 }
 
+message GetPoseRequest {
+  // frame A
+  string frame_A = 1;
+  // frame B
+  string frame_B = 2;
+}
+
 service Visualizer {
   // Start the visualizer.
   rpc StartVisualizer(StartVisualizerRequest) returns (Null) {}
@@ -55,4 +62,6 @@ service Visualizer {
   rpc StopVisualizer(Null) returns (Null) {}
   // Set the current positions.
   rpc SetPositions(SetPositionsRequest) returns (Null) {}
+  // Get the pose of a gicen target frame.
+  rpc GetPose(GetPoseRequest) returns (FrameRelativePose) {}
 }
