@@ -41,8 +41,18 @@ message StartVisualizerRequest {
   bool show_prm = 7;
 }
 
+message SetPositionsRequest {
+  oneof position_data {
+    Conf conf = 1;
+    SystemConf system_conf = 2;
+  }
+}
+
 service Visualizer {
+  // Start the visualizer.
   rpc StartVisualizer(StartVisualizerRequest) returns (Null) {}
+  // Stop the visualizer.
   rpc StopVisualizer(Null) returns (Null) {}
-  rpc HandleVisualizeRegionsRequest(Null) returns (Null) {}
+  // Set the current positions.
+  rpc SetPositions(SetPositionsRequest) returns (Null) {}
 }
