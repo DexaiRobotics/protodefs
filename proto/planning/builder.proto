@@ -34,11 +34,14 @@ message StartBuildRequest {
     // Data used to construct a sample-based PRM. The resulting discrete edges
     // will be used to seed the IRIS regions.
     RoadmapData roadmap_data = 5;
+  // start and goal system confs for problem to solve and insert into db 
+  SystemConf start_sysconf = 6;
+  SystemConf goal_sysconf = 7;
   }
 }
 
-// Response which contains the result of attempting to start computation of a
-// solution for the corresponding StartBuildRequest.
+/** Response which contains the result of attempting to start computation of a
+ * solution for the corresponding StartBuildFromConfsRequest. */
 message StartBuildResponse {
   // ID of request. Used to track job status.
   string id = 1;
