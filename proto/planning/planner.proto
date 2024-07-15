@@ -42,8 +42,32 @@ message RetrievePlanResponse {
   }
 }
 
+// Request to calculate the pose of a given joint configuration.
+message CalcRelativePoseRequest {
+  // ID of the target context.
+  PlanContextId context_id = 1;
+  // The joint configuration as a system conf.
+  SystemConf system_conf = 2;
+  // The relative frame.
+  string frame_A = 3;
+  // The target frame.
+  string frame_B = 4;
+}
+
+// Response containing calculated pose.
+message CalcRelativePoseResponse {
+  // Pose X_AB.
+  RigidTransform pose = 1;
+}
+
 service MotionPlanner {
+  // Given a request for a motion plan, initiate a job to compute its solution.
   rpc HandleStartRequest(StartPlanRequest) returns (StartPlanResponse) {}
+  // Given a request to retrieve a computed motion plan, retrieve the computed
+  // solution.
   rpc HandleRetrieveRequest(RetrievePlanRequest)
       returns (RetrievePlanResponse) {}
+  // Calculate a relative pose.
+  rpc CalcRelativePose(CalcRelativePoseRequest)
+      returns (CalcRelativePoseResponse) {}
 }
